@@ -18,9 +18,21 @@ function CustomerPortal() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
+const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    membershipTier: 'bronze',
+    status: 'active'
+  });
 
 const [newCustomer, setNewCustomer] = useState({
     firstName: '',
@@ -128,11 +140,39 @@ const [newCustomer, setNewCustomer] = useState({
     }
   }
 
+function handleEditCustomer(customer) {
+    setEditFormData({
+      firstName: customer.firstName || '',
+      lastName: customer.lastName || '',
+      email: customer.email || '',
+      phone: customer.phone || '',
+      address: customer.address || '',
+      city: customer.city || '',
+      state: customer.state || '',
+      zipCode: customer.zipCode || '',
+      membershipTier: customer.membershipTier || 'bronze',
+      status: customer.status || 'active'
+    });
+    setEditingCustomer(customer);
+  }
+
   async function handleUpdateCustomer(id, updateData) {
     try {
-      await customerService.update(id, updateData);
+      await customerService.update(id, updateData || editFormData);
       toast.success('Customer updated successfully');
       setEditingCustomer(null);
+      setEditFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        address: '',
+        city: '',
+        state: '',
+        zipCode: '',
+        membershipTier: 'bronze',
+        status: 'active'
+      });
       await loadCustomers();
     } catch (err) {
       console.error('Error updating customer:', err);
@@ -342,7 +382,7 @@ const [newCustomer, setNewCustomer] = useState({
             </motion.div>
           ))}
         </div>
-      )}
+)}
 
       {/* Create Customer Modal */}
       {showCreateForm && (
@@ -451,6 +491,131 @@ const [newCustomer, setNewCustomer] = useState({
                 <Button
                   variant="outline"
                   onClick={() => setShowCreateForm(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Edit Customer Modal */}
+      {editingCustomer && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold">Edit Customer</h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingCustomer(null)}
+                >
+                  <ApperIcon name="X" size={16} />
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2">First Name *</label>
+                  <Input
+                    value={editFormData.firstName}
+                    onChange={(e) => setEditFormData(prev => ({...prev, firstName: e.target.value}))}
+                    placeholder="Enter first name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Last Name *</label>
+                  <Input
+                    value={editFormData.lastName}
+                    onChange={(e) => setEditFormData(prev => ({...prev, lastName: e.target.value}))}
+                    placeholder="Enter last name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Email *</label>
+                  <Input
+                    type="email"
+                    value={editFormData.email}
+                    onChange={(e) => setEditFormData(prev => ({...prev, email: e.target.value}))}
+                    placeholder="Enter email address"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Phone</label>
+                  <Input
+                    value={editFormData.phone}
+                    onChange={(e) => setEditFormData(prev => ({...prev, phone: e.target.value}))}
+                    placeholder="Enter phone number"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium mb-2">Address</label>
+                  <Input
+                    value={editFormData.address}
+                    onChange={(e) => setEditFormData(prev => ({...prev, address: e.target.value}))}
+                    placeholder="Enter street address"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">City</label>
+                  <Input
+                    value={editFormData.city}
+                    onChange={(e) => setEditFormData(prev => ({...prev, city: e.target.value}))}
+                    placeholder="Enter city"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">State</label>
+                  <Input
+                    value={editFormData.state}
+                    onChange={(e) => setEditFormData(prev => ({...prev, state: e.target.value}))}
+                    placeholder="Enter state"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">ZIP Code</label>
+                  <Input
+                    value={editFormData.zipCode}
+                    onChange={(e) => setEditFormData(prev => ({...prev, zipCode: e.target.value}))}
+                    placeholder="Enter ZIP code"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Membership Tier</label>
+                  <select
+                    value={editFormData.membershipTier}
+                    onChange={(e) => setEditFormData(prev => ({...prev, membershipTier: e.target.value}))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
+                  >
+                    <option value="bronze">Bronze</option>
+                    <option value="silver">Silver</option>
+                    <option value="gold">Gold</option>
+                    <option value="platinum">Platinum</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Status</label>
+                  <select
+                    value={editFormData.status}
+                    onChange={(e) => setEditFormData(prev => ({...prev, status: e.target.value}))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button onClick={() => handleUpdateCustomer(editingCustomer.Id)} className="flex-1">
+                  Update Customer
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setEditingCustomer(null)}
                   className="flex-1"
                 >
                   Cancel
