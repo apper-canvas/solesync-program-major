@@ -1,20 +1,20 @@
-import { useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import React, { useState } from "react";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
+import Promotions from "@/components/pages/Promotions";
+import POS from "@/components/pages/POS";
+import CustomerPortal from "@/components/pages/CustomerPortal";
+import Inventory from "@/components/pages/Inventory";
+import Settings from "@/components/pages/Settings";
+import Dashboard from "@/components/pages/Dashboard";
+import Reports from "@/components/pages/Reports";
+import Receiving from "@/components/pages/Receiving";
+import Sync from "@/components/pages/Sync";
+import SupplierPortal from "@/components/pages/SupplierPortal";
+import Fulfillment from "@/components/pages/Fulfillment";
 import Sidebar from "@/components/organisms/Sidebar";
 import Header from "@/components/organisms/Header";
-
 // Pages
-import Dashboard from "@/components/pages/Dashboard";
-import Inventory from "@/components/pages/Inventory";
-import POS from "@/components/pages/POS";
-import Receiving from "@/components/pages/Receiving";
-import Fulfillment from "@/components/pages/Fulfillment";
-import Reports from "@/components/pages/Reports";
-import Sync from "@/components/pages/Sync";
-import Settings from "@/components/pages/Settings";
-import SupplierPortal from "@/components/pages/SupplierPortal";
-import CustomerPortal from "@/components/pages/CustomerPortal";
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -57,12 +57,13 @@ const getPageTitle = (pathname) => {
                     <Route path="/inventory" element={<Inventory />} />
                     <Route path="/pos" element={<POS />} />
                     <Route path="/receiving" element={<Receiving />} />
+                    <Route path="/customers" element={<CustomerPortal />} />
+                    <Route path="/promotions" element={<Promotions />} />
                     <Route path="/fulfillment" element={<Fulfillment />} />
                     <Route path="/reports" element={<Reports />} />
                     <Route path="/sync" element={<Sync />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/suppliers" element={<SupplierPortal />} />
-                    <Route path="/customers" element={<CustomerPortal />} />
                   </Routes>
                 </main>
               </>

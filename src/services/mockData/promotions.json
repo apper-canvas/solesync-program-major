@@ -1,0 +1,59 @@
+[
+  {
+    "Id": 1,
+    "name": "Summer Sale",
+    "description": "Get 20% off all footwear",
+    "type": "percentage",
+    "value": 20,
+    "conditions": {
+      "minimumAmount": 50,
+      "applicableCategories": ["sneakers", "boots", "sandals"],
+      "maxUses": null,
+      "customerTier": null
+    },
+    "startDate": "2024-06-01T00:00:00Z",
+    "endDate": "8/31/2024 11:59:59 PMZ",
+    "status": "active",
+    "usageCount": 47,
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-15T10:00:00Z"
+  },
+  {
+    "Id": 2,
+    "name": "New Customer Welcome",
+    "description": "$10 off your first purchase",
+    "type": "fixed",
+    "value": 10,
+    "conditions": {
+      "minimumAmount": 25,
+      "applicableCategories": null,
+      "maxUses": 1,
+      "customerTier": "new"
+    },
+    "startDate": "2024-01-01T00:00:00Z",
+    "endDate": "2024-12-31T23:59:59Z",
+    "status": "active",
+    "usageCount": 23,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-01T00:00:00Z"
+  },
+  {
+    "Id": 3,
+    "name": "Buy One Get One 50% Off",
+    "description": "Buy any sneaker, get second at 50% off",
+    "type": "bogo",
+    "value": 50,
+    "conditions": {
+      "minimumAmount": null,
+      "applicableCategories": ["sneakers"],
+      "maxUses": null,
+      "customerTier": null
+    },
+    "startDate": "2024-03-01T00:00:00Z",
+    "endDate": "2024-03-31T23:59:59Z",
+    "status": "expired",
+    "usageCount": 156,
+    "createdAt": "2024-02-15T00:00:00Z",
+    "updatedAt": "2024-02-15T00:00:00Z"
+  }
+]

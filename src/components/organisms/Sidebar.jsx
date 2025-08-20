@@ -1,5 +1,6 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
+import React from "react";
 import ApperIcon from "@/components/ApperIcon";
 import StatusIndicator from "@/components/molecules/StatusIndicator";
 
@@ -14,7 +15,7 @@ const navigationItems = [
     { path: "/fulfillment", icon: "MapPin", label: "Fulfillment" },
     { path: "/suppliers", icon: "Users", label: "Supplier Portal" },
     { path: "/customers", icon: "UserCheck", label: "Customer Portal" },
-{ path: "/reports", icon: "Activity", label: "Reports" },
+    { path: "/reports", icon: "Activity", label: "Reports" },
     { path: "/sync", icon: "RefreshCw", label: "Sync" },
     { path: "/settings", icon: "Settings", label: "Settings" }
   ];
@@ -27,8 +28,7 @@ const navigationItems = [
   // Desktop Sidebar (static)
   const DesktopSidebar = () => (
     <div className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-white border-r border-gray-200">
-      <div className="flex flex-col flex-1 min-h-0">
-        {/* Logo */}
+<div className="flex flex-col flex-1 min-h-0">
         <div className="flex items-center flex-shrink-0 px-6 py-6 border-b border-gray-200">
           <div className="flex items-center">
             <div className="p-2 bg-gradient-to-br from-secondary to-blue-600 rounded-xl">

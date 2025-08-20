@@ -6,6 +6,7 @@ import { TransactionService } from '@/services/api/transactionService'
 import { GiftCardService } from '@/services/api/giftCardService'
 import { FulfillmentService } from '@/services/api/fulfillmentService'
 import { InventoryService } from '@/services/api/inventoryService'
+import { PromotionService } from '@/services/api/promotionService'
 import ApperIcon from '@/components/ApperIcon'
 import Error from "@/components/ui/Error";
 import Empty from "@/components/ui/Empty";
@@ -21,7 +22,9 @@ const POSInterface = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [discount, setDiscount] = useState(0);
+const [discount, setDiscount] = useState(0);
+  const [selectedPromotion, setSelectedPromotion] = useState(null);
+  const [availablePromotions, setAvailablePromotions] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [customerPaid, setCustomerPaid] = useState("");
   const [giftCardCode, setGiftCardCode] = useState("");
@@ -111,15 +114,46 @@ const clearCart = () => {
     setCustomerPaid("");
     setGiftCardCode("");
     setGiftCardBalance(null);
-    setDiscount(0);
+setDiscount(0);
+    setSelectedPromotion(null);
   };
 
-  const calculateSubtotal = () => {
+const calculateSubtotal = () => {
     return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   };
 
-  const calculateDiscount = () => {
+  const calculateManualDiscount = () => {
     return calculateSubtotal() * (discount / 100);
+  };
+
+  const calculatePromotionDiscount = () => {
+    if (!selectedPromotion) return 0;
+    
+    const subtotal = calculateSubtotal();
+    
+    switch (selectedPromotion.type) {
+      case 'percentage':
+        return subtotal * (selectedPromotion.value / 100);
+      case 'fixed':
+        return Math.min(selectedPromotion.value, subtotal);
+      case 'bogo':
+        // Simple BOGO implementation - 50% off second item
+        const applicableItems = cart.filter(item => 
+          !selectedPromotion.conditions.applicableCategories || 
+          selectedPromotion.conditions.applicableCategories.includes(item.category)
+        );
+        if (applicableItems.length >= 2) {
+          const cheapestItem = Math.min(...applicableItems.map(item => item.price));
+          return cheapestItem * (selectedPromotion.value / 100);
+        }
+        return 0;
+      default:
+        return 0;
+    }
+  };
+
+  const calculateDiscount = () => {
+    return calculateManualDiscount() + calculatePromotionDiscount();
   };
 
   const calculateTax = () => {
@@ -133,6 +167,34 @@ const clearCart = () => {
   const calculateChange = () => {
     const paid = parseFloat(customerPaid) || 0;
     return paid - calculateTotal();
+  };
+
+  const loadPromotions = async () => {
+    try {
+      const promotions = await PromotionService.getActivePromotions();
+      setAvailablePromotions(promotions);
+    } catch (err) {
+      console.error('Failed to load promotions:', err);
+    }
+  };
+
+  const isPromotionApplicable = (promotion) => {
+    const subtotal = calculateSubtotal();
+    
+    // Check minimum amount
+    if (promotion.conditions.minimumAmount && subtotal < promotion.conditions.minimumAmount) {
+      return false;
+    }
+    
+    // Check applicable categories
+    if (promotion.conditions.applicableCategories) {
+      const hasApplicableItems = cart.some(item => 
+        promotion.conditions.applicableCategories.includes(item.category)
+      );
+      if (!hasApplicableItems) return false;
+    }
+    
+    return true;
   };
 
 const lookupTransaction = async () => {
@@ -300,11 +362,21 @@ const processTransaction = async () => {
     }
 
     try {
-      let transaction = {
+let transaction = {
         type: "sale",
         items: cart,
         subtotal: calculateSubtotal(),
-        discount: calculateDiscount(),
+        discount: {
+          manual: calculateManualDiscount(),
+          promotion: calculatePromotionDiscount(),
+          total: calculateDiscount()
+        },
+        promotion: selectedPromotion ? {
+          id: selectedPromotion.Id,
+          name: selectedPromotion.name,
+          type: selectedPromotion.type,
+          value: selectedPromotion.value
+        } : null,
         tax: calculateTax(),
         total: total,
         payment: {
@@ -339,6 +411,7 @@ const processTransaction = async () => {
       toast.success("Payment processed successfully!");
       resetTransactionState();
       loadProducts();
+      loadPromotions();
     } catch (err) {
       toast.error("Failed to process payment");
       console.error("Payment error:", err);
@@ -759,9 +832,46 @@ return (
                         </div>)}
                     </div>
                     {/* Discount */}
+{/* Promotions */}
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Available Promotions</label>
+                        <div className="space-y-2 max-h-32 overflow-y-auto">
+                            {availablePromotions.length === 0 ? (
+                                <div className="text-sm text-gray-500 p-2 bg-gray-50 rounded">
+                                    No active promotions available
+                                </div>
+                            ) : (
+                                <>
+                                    <Button
+                                        variant={!selectedPromotion ? "primary" : "secondary"}
+                                        size="sm"
+                                        onClick={() => setSelectedPromotion(null)}
+                                        className="w-full justify-start text-left">
+                                        No Promotion
+                                    </Button>
+                                    {availablePromotions.map(promotion => (
+                                        <Button
+                                            key={promotion.Id}
+                                            variant={selectedPromotion?.Id === promotion.Id ? "primary" : "secondary"}
+                                            size="sm"
+                                            onClick={() => setSelectedPromotion(promotion)}
+                                            disabled={!isPromotionApplicable(promotion)}
+                                            className={`w-full justify-start text-left ${!isPromotionApplicable(promotion) ? 'opacity-50' : ''}`}>
+                                            <div className="flex flex-col items-start">
+                                                <span className="font-medium">{promotion.name}</span>
+                                                <span className="text-xs opacity-75">{promotion.description}</span>
+                                            </div>
+                                        </Button>
+                                    ))}
+                                </>
+                            )}
+                        </div>
+                    </div>
+                    
+                    {/* Manual Discount */}
                     <div className="mb-4">
                         <Input
-                            label="Discount (%)"
+                            label="Additional Discount (%)"
                             type="number"
                             value={discount}
                             onChange={e => setDiscount(Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
@@ -769,16 +879,25 @@ return (
                             max="100"
                             className="text-sm" />
                     </div>
+                    
                     {/* Totals */}
                     <div className="space-y-2 mb-6 p-4 bg-gray-50 rounded-lg">
                         <div className="flex justify-between text-sm">
                             <span>Subtotal:</span>
                             <span>${calculateSubtotal().toFixed(2)}</span>
                         </div>
-                        {discount > 0 && <div className="flex justify-between text-sm text-success">
-                            <span>Discount ({discount}%):</span>
-                            <span>-${calculateDiscount().toFixed(2)}</span>
-                        </div>}
+                        {selectedPromotion && (
+                            <div className="flex justify-between text-sm text-success">
+                                <span>{selectedPromotion.name}:</span>
+                                <span>-${calculatePromotionDiscount().toFixed(2)}</span>
+                            </div>
+                        )}
+                        {discount > 0 && (
+                            <div className="flex justify-between text-sm text-success">
+                                <span>Additional Discount ({discount}%):</span>
+                                <span>-${calculateManualDiscount().toFixed(2)}</span>
+                            </div>
+                        )}
                         <div className="flex justify-between text-sm">
                             <span>Tax (8%):</span>
                             <span>${calculateTax().toFixed(2)}</span>
@@ -788,6 +907,7 @@ return (
                             <span>${calculateTotal().toFixed(2)}</span>
                         </div>
                     </div>
+                    
                     {/* Gift Card Actions */}
                     <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                         <h3 className="text-sm font-medium text-gray-700 mb-3">Gift Card Services</h3>
@@ -880,6 +1000,7 @@ return (
                             </div>}
                         </div>}
                     </div>
+                    
                     {/* Payment Method */}
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
@@ -904,6 +1025,7 @@ return (
                                                   </Button>
                         </div>
                     </div>
+                    
                     {/* Cash Payment */}
                     {paymentMethod === "cash" && <div className="mb-4">
                         <Input
@@ -918,6 +1040,7 @@ return (
                         {customerPaid && parseFloat(customerPaid) >= calculateTotal() && <div className="mt-2 p-2 bg-success/10 rounded text-sm text-success">Change: ${calculateChange().toFixed(2)}
                         </div>}
                     </div>}
+                    
                     {/* Gift Card Payment */}
                     {paymentMethod === "gift_card" && <div className="mb-4">
                         <div className="flex space-x-2 mb-2">
@@ -941,8 +1064,8 @@ return (
                                                   Required: ${calculateTotal().toFixed(2)}
                         </div>}
                     </div>}
+                    
                     {/* Process Payment */}
-                    {/* Transaction Processing */}
                     {transactionMode === "return" ? <Button
                         onClick={processTransaction}
                         className="w-full"
