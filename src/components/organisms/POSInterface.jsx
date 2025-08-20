@@ -745,13 +745,13 @@ return (
                   </div>
                 </motion.div>
               ))}
-            </div>
+</div>
           )}
         </Card>
-</Card>
       </div>
+        )}
 
-      {/* Cart & Checkout */}
+        {/* Cart & Checkout */}
       <div className="lg:col-span-1">
         <Card className="p-6 sticky top-6">
           <div className="flex items-center justify-between mb-6">
