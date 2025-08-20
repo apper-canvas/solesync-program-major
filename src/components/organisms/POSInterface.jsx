@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
-import * as PurchaseOrderService from "@/services/api/purchaseOrderService";
-import * as TransactionService from "@/services/api/transactionService";
-import * as GiftCardService from "@/services/api/giftCardService";
-import * as FulfillmentService from "@/services/api/fulfillmentService";
-import * as InventoryService from "@/services/api/inventoryService";
-import ApperIcon from "@/components/ApperIcon";
+import { PurchaseOrderService } from '@/services/api/purchaseOrderService'
+import { TransactionService } from '@/services/api/transactionService'
+import { GiftCardService } from '@/services/api/giftCardService'
+import { FulfillmentService } from '@/services/api/fulfillmentService'
+import { InventoryService } from '@/services/api/inventoryService'
+import ApperIcon from '@/components/ApperIcon'
 import Error from "@/components/ui/Error";
 import Empty from "@/components/ui/Empty";
 import Loading from "@/components/ui/Loading";
