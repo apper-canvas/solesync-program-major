@@ -239,7 +239,11 @@ function showDeleteConfirmation(customer) {
           <h1 className="text-2xl font-bold text-gray-900">Customer Portal</h1>
           <p className="text-gray-600">Manage customer relationships and profiles</p>
         </div>
-        <Button onClick={() => setShowCreateForm(true)} className="w-full sm:w-auto">
+<Button 
+          onClick={() => setShowCreateForm(true)} 
+          className="w-full sm:w-auto"
+          tooltip="Create a new customer profile"
+        >
           <ApperIcon name="Plus" size={16} />
           Add Customer
         </Button>
@@ -350,27 +354,30 @@ function showDeleteConfirmation(customer) {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button
+<Button
                     variant="outline"
                     size="sm"
                     onClick={() => setSelectedCustomer(customer)}
                     className="flex-1"
+                    tooltip="View detailed customer information"
                   >
                     <ApperIcon name="Eye" size={14} />
                     View
                   </Button>
-                  <Button
+<Button
                     variant="outline"
                     size="sm"
                     onClick={() => setSelectedCustomerLoyalty(customer)}
                     className="bg-accent/10 hover:bg-accent/20 text-accent"
+                    tooltip="Manage loyalty points and rewards"
                   >
                     <ApperIcon name="Star" size={14} />
                   </Button>
-                  <Button
+<Button
                     variant="outline"
                     size="sm"
                     onClick={() => setEditingCustomer(customer)}
+                    tooltip="Edit customer details"
                   >
                     <ApperIcon name="Edit" size={14} />
                   </Button>
@@ -379,6 +386,7 @@ function showDeleteConfirmation(customer) {
                     size="sm"
                     onClick={() => showDeleteConfirmation(customer)}
                     className="text-red-600 hover:text-red-700"
+                    tooltip="Delete customer permanently"
                   >
                     <ApperIcon name="Trash2" size={14} />
                   </Button>
@@ -396,10 +404,11 @@ function showDeleteConfirmation(customer) {
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold">Add New Customer</h2>
-                <Button
+<Button
                   variant="outline"
                   size="sm"
                   onClick={() => setShowCreateForm(false)}
+                  tooltip="Close create customer form"
                 >
                   <ApperIcon name="X" size={16} />
                 </Button>
@@ -490,13 +499,18 @@ function showDeleteConfirmation(customer) {
               </div>
 
               <div className="flex gap-3">
-                <Button onClick={handleCreateCustomer} className="flex-1">
+<Button 
+                  onClick={handleCreateCustomer} 
+                  className="flex-1"
+                  tooltip="Save the new customer profile"
+                >
                   Create Customer
                 </Button>
-                <Button
+<Button
                   variant="outline"
                   onClick={() => setShowCreateForm(false)}
                   className="flex-1"
+                  tooltip="Cancel creating new customer"
                 >
                   Cancel
                 </Button>
@@ -514,9 +528,10 @@ function showDeleteConfirmation(customer) {
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold">Edit Customer</h2>
                 <Button
-                  variant="outline"
+variant="outline"
                   size="sm"
                   onClick={() => setEditingCustomer(null)}
+                  tooltip="Close edit customer form"
                 >
                   <ApperIcon name="X" size={16} />
                 </Button>
@@ -615,13 +630,18 @@ function showDeleteConfirmation(customer) {
               </div>
 
               <div className="flex gap-3">
-                <Button onClick={() => handleUpdateCustomer(editingCustomer.Id)} className="flex-1">
+<Button 
+                  onClick={() => handleUpdateCustomer(editingCustomer.Id)} 
+                  className="flex-1"
+                  tooltip="Save changes to customer profile"
+                >
                   Update Customer
                 </Button>
-                <Button
+<Button
                   variant="outline"
                   onClick={() => setEditingCustomer(null)}
                   className="flex-1"
+                  tooltip="Cancel editing and discard changes"
                 >
                   Cancel
                 </Button>
@@ -638,10 +658,11 @@ function showDeleteConfirmation(customer) {
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold">Customer Details</h2>
-                <Button
+<Button
                   variant="outline"
                   size="sm"
                   onClick={() => setSelectedCustomer(null)}
+                  tooltip="Close customer details view"
                 >
                   <ApperIcon name="X" size={16} />
                 </Button>
@@ -708,31 +729,34 @@ function showDeleteConfirmation(customer) {
                 </div>
 
                 <div className="flex gap-3 pt-4 border-t">
-                  <Button
+<Button
                     onClick={() => {
                       setEditingCustomer(selectedCustomer);
                       setSelectedCustomer(null);
                     }}
                     className="flex-1"
+                    tooltip="Edit this customer's profile"
                   >
                     <ApperIcon name="Edit" size={16} />
                     Edit Customer
                   </Button>
-                  <Button
+<Button
                     variant="outline"
                     onClick={() => {
                       setSelectedCustomerLoyalty(selectedCustomer);
                       setSelectedCustomer(null);
                     }}
                     className="bg-accent/10 hover:bg-accent/20 text-accent"
+                    tooltip="Manage loyalty points and rewards"
                   >
                     <ApperIcon name="Star" size={16} />
                     Loyalty
                   </Button>
-                  <Button
-variant="outline"
+<Button
+                    variant="outline"
                     onClick={() => showDeleteConfirmation(selectedCustomer)}
                     className="text-red-600 hover:text-red-700"
+                    tooltip="Delete this customer permanently"
                   >
                     <ApperIcon name="Trash2" size={16} />
                     Delete
@@ -757,9 +781,10 @@ variant="outline"
                   </p>
                 </div>
                 <Button
-                  variant="outline"
+variant="outline"
                   size="sm"
                   onClick={() => setSelectedCustomerLoyalty(null)}
+                  tooltip="Close loyalty management panel"
                 >
                   <ApperIcon name="X" size={16} />
                 </Button>
@@ -847,7 +872,7 @@ variant="outline"
                       onChange={(e) => setPointsToAward(e.target.value)}
                       className="flex-1"
                     />
-                    <Button
+<Button
                       onClick={async () => {
                         if (!pointsToAward || pointsToAward <= 0) {
                           toast.error('Please enter valid points amount');
@@ -866,6 +891,7 @@ variant="outline"
                         }
                       }}
                       disabled={!pointsToAward || pointsToAward <= 0}
+                      tooltip="Add loyalty points to customer's account"
                     >
                       <ApperIcon name="Plus" size={16} />
                       Award Points
@@ -878,7 +904,7 @@ variant="outline"
                   <h3 className="text-lg font-semibold mb-3">Redeem Rewards</h3>
                   <div className="space-y-3">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {rewardOptions.map((reward) => (
+{rewardOptions.map((reward) => (
                         <Button
                           key={reward.value}
                           variant="outline"
@@ -899,6 +925,7 @@ variant="outline"
                           }}
                           disabled={(selectedCustomerLoyalty.rewardsBalance || 0) < reward.cost}
                           className="justify-between"
+                          tooltip={`Redeem ${reward.label} for ${reward.cost} points`}
                         >
                           <span>{reward.label}</span>
                           <span className="text-sm text-gray-500">{reward.cost} pts</span>
@@ -957,15 +984,17 @@ variant="outline"
               
               <div className="flex gap-3">
                 <Button
-                  variant="outline"
+variant="outline"
                   onClick={() => setDeleteConfirmation({ show: false, customer: null })}
                   className="flex-1"
+                  tooltip="Cancel delete operation"
                 >
                   Cancel
                 </Button>
-                <Button
+<Button
                   onClick={handleDeleteCustomer}
                   className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  tooltip="Permanently delete this customer"
                 >
                   <ApperIcon name="Trash2" size={16} />
                   Delete Customer

@@ -10,6 +10,7 @@ const Button = React.forwardRef(({
   icon,
   iconPosition = "left",
   loading = false,
+  tooltip,
   className,
   disabled,
   ...props 
@@ -33,35 +34,44 @@ const Button = React.forwardRef(({
 
   const isDisabled = disabled || loading;
 
-  return (
-    <motion.button
-      ref={ref}
-      whileHover={!isDisabled ? { scale: 1.02 } : {}}
-      whileTap={!isDisabled ? { scale: 0.98 } : {}}
-      disabled={isDisabled}
-      className={cn(
-        baseStyles,
-        variants[variant],
-        sizes[size],
-        isDisabled && "opacity-50 cursor-not-allowed",
-        className
-      )}
-      {...props}
-    >
-      {loading ? (
-        <ApperIcon name="Loader2" className="h-4 w-4 animate-spin mr-2" />
-      ) : (
-        icon && iconPosition === "left" && (
-          <ApperIcon name={icon} className="h-4 w-4 mr-2" />
-        )
-      )}
+return (
+    <div className="relative inline-block group">
+      <motion.button
+        ref={ref}
+        whileHover={!isDisabled ? { scale: 1.02 } : {}}
+        whileTap={!isDisabled ? { scale: 0.98 } : {}}
+        disabled={isDisabled}
+        className={cn(
+          baseStyles,
+          variants[variant],
+          sizes[size],
+          isDisabled && "opacity-50 cursor-not-allowed",
+          className
+        )}
+        {...props}
+      >
+        {loading ? (
+          <ApperIcon name="Loader2" className="h-4 w-4 animate-spin mr-2" />
+        ) : (
+          icon && iconPosition === "left" && (
+            <ApperIcon name={icon} className="h-4 w-4 mr-2" />
+          )
+        )}
+        
+        {children}
+        
+        {!loading && icon && iconPosition === "right" && (
+          <ApperIcon name={icon} className="h-4 w-4 ml-2" />
+        )}
+      </motion.button>
       
-      {children}
-      
-      {!loading && icon && iconPosition === "right" && (
-        <ApperIcon name={icon} className="h-4 w-4 ml-2" />
+      {tooltip && (
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-sm text-white bg-gray-900 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 pointer-events-none">
+          {tooltip}
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+        </div>
       )}
-    </motion.button>
+    </div>
   );
 });
 
