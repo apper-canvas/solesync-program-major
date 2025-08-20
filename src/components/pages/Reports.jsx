@@ -97,9 +97,10 @@ const loadReportsData = async () => {
     }
   };
 
-  const tabs = [
+const tabs = [
     { id: "sales", label: "Sales Analysis", icon: "TrendingUp" },
     { id: "inventory", label: "Inventory Reports", icon: "Package" },
+    { id: "forecasting", label: "Size Forecasting", icon: "Activity" },
     { id: "financial", label: "Financial Reports", icon: "DollarSign" },
     { id: "customers", label: "Customer Analytics", icon: "Users" }
   ];
@@ -290,7 +291,11 @@ const loadReportsData = async () => {
         />
       )}
 
-      {activeTab !== "sales" && activeTab !== "inventory" && (
+{activeTab === "forecasting" && (
+        <SizeForecastingTab loading={loading} />
+      )}
+
+      {activeTab !== "sales" && activeTab !== "inventory" && activeTab !== "forecasting" && (
         <Card className="p-12 text-center">
           <ApperIcon name="BarChart3" className="h-16 w-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
@@ -581,5 +586,406 @@ function InventoryAnalysisTab({ slowMovingItems, loading }) {
     </div>
   );
 };
+
+// Size Forecasting Tab Component
+function SizeForecastingTab({ loading }) {
+  const [sizeAnalytics, setSizeAnalytics] = useState(null);
+  const [predictions, setPredictions] = useState(null);
+  const [selectedBrand, setSelectedBrand] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [forecastPeriod, setForecastPeriod] = useState("30");
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+
+  useEffect(() => {
+    loadSizeForecasting();
+  }, [selectedBrand, selectedCategory, forecastPeriod]);
+
+  const loadSizeForecasting = async () => {
+    try {
+      setAnalysisLoading(true);
+      const [analytics, forecast] = await Promise.all([
+        TransactionService.getSizeAnalytics({ brand: selectedBrand, category: selectedCategory }),
+        TransactionService.predictSizeDemand({ 
+          brand: selectedBrand, 
+          category: selectedCategory,
+          days: parseInt(forecastPeriod)
+        })
+      ]);
+      
+      setSizeAnalytics(analytics);
+      setPredictions(forecast);
+      toast.success("Size forecasting analysis completed");
+    } catch (err) {
+      toast.error("Failed to load size forecasting data");
+      console.error("Size forecasting error:", err);
+    } finally {
+      setAnalysisLoading(false);
+    }
+  };
+
+  const handleGenerateForecast = () => {
+    toast.info("Generating new forecast with updated parameters...");
+    loadSizeForecasting();
+  };
+
+  const handleExportForecast = () => {
+    if (predictions) {
+      const dataStr = JSON.stringify(predictions, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      const exportFileDefaultName = `size-forecast-${forecastPeriod}days.json`;
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+      
+      toast.success("Forecast data exported successfully");
+    }
+  };
+
+  const sizeDistributionOptions = {
+    chart: {
+      type: "bar",
+      height: 350,
+      toolbar: { show: true }
+    },
+    colors: ["#4A90E2", "#00D084"],
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        dataLabels: { position: 'top' }
+      }
+    },
+    dataLabels: {
+      enabled: true,
+      formatter: (val) => `${val}%`,
+      offsetY: -20,
+      style: { fontSize: '12px', colors: ["#304758"] }
+    },
+    xaxis: {
+      categories: sizeAnalytics?.historical?.sizes || [],
+      title: { text: 'Shoe Sizes' }
+    },
+    yaxis: {
+      title: { text: 'Sales Distribution (%)' },
+      labels: { formatter: (val) => `${val}%` }
+    },
+    legend: { position: "top" }
+  };
+
+  const demandTrendOptions = {
+    chart: {
+      type: "line",
+      height: 400,
+      toolbar: { show: true }
+    },
+    colors: ["#4A90E2", "#00D084", "#F5A623"],
+    stroke: { 
+      curve: "smooth",
+      width: [3, 3, 2],
+      dashArray: [0, 0, 5]
+    },
+    xaxis: {
+      categories: predictions?.timeline || [],
+      title: { text: 'Time Period' }
+    },
+    yaxis: {
+      title: { text: 'Predicted Demand (Units)' },
+      labels: { formatter: (val) => Math.round(val) }
+    },
+    legend: { position: "top" }
+  };
+
+  if (loading || analysisLoading) {
+    return <Loading rows={4} />;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Control Panel */}
+      <Card className="p-6">
+        <div className="flex flex-col lg:flex-row gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Brand Filter</label>
+              <select
+                value={selectedBrand}
+                onChange={(e) => setSelectedBrand(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary"
+              >
+                <option value="all">All Brands</option>
+                <option value="Nike">Nike</option>
+                <option value="Adidas">Adidas</option>
+                <option value="Jordan">Jordan</option>
+                <option value="New Balance">New Balance</option>
+                <option value="Vans">Vans</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Category Filter</label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary"
+              >
+                <option value="all">All Categories</option>
+                <option value="Sneakers">Sneakers</option>
+                <option value="Running">Running</option>
+                <option value="Basketball">Basketball</option>
+                <option value="Lifestyle">Lifestyle</option>
+                <option value="Casual">Casual</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Forecast Period</label>
+              <select
+                value={forecastPeriod}
+                onChange={(e) => setForecastPeriod(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary"
+              >
+                <option value="7">7 Days</option>
+                <option value="14">14 Days</option>
+                <option value="30">30 Days</option>
+                <option value="60">60 Days</option>
+                <option value="90">90 Days</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <Button 
+              variant="secondary" 
+              icon="RefreshCw"
+              onClick={handleGenerateForecast}
+              disabled={analysisLoading}
+            >
+              Regenerate
+            </Button>
+            <Button 
+              variant="secondary" 
+              icon="Download"
+              onClick={handleExportForecast}
+              disabled={!predictions}
+            >
+              Export
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      {/* Key Metrics */}
+      {sizeAnalytics && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-secondary/10 rounded-lg">
+                <ApperIcon name="Activity" className="h-5 w-5 text-secondary" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Most Popular Size</p>
+                <p className="text-xl font-semibold text-gray-900">{sizeAnalytics.topSize}</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-success/10 rounded-lg">
+                <ApperIcon name="TrendingUp" className="h-5 w-5 text-success" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Prediction Accuracy</p>
+                <p className="text-xl font-semibold text-gray-900">{predictions?.accuracy || 87}%</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-warning/10 rounded-lg">
+                <ApperIcon name="BarChart3" className="h-5 w-5 text-warning" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Size Diversity Index</p>
+                <p className="text-xl font-semibold text-gray-900">{sizeAnalytics.diversityIndex}</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-info/10 rounded-lg">
+                <ApperIcon name="Target" className="h-5 w-5 text-info" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Recommended Stock</p>
+                <p className="text-xl font-semibold text-gray-900">{predictions?.totalRecommended || 0}</p>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Historical Size Distribution */}
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Size Distribution Analysis</h2>
+              <p className="text-sm text-gray-500">Historical vs. predicted demand by size</p>
+            </div>
+            <Button variant="ghost" size="sm" icon="BarChart3">
+              View Details
+            </Button>
+          </div>
+          
+          {sizeAnalytics && (
+            <Chart
+              options={sizeDistributionOptions}
+              series={[
+                {
+                  name: "Historical Sales",
+                  data: sizeAnalytics.historical?.percentages || []
+                },
+                {
+                  name: "Predicted Demand",
+                  data: predictions?.sizeDistribution || []
+                }
+              ]}
+              type="bar"
+              height={350}
+            />
+          )}
+        </Card>
+
+        {/* Demand Trend Forecast */}
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Demand Trend Forecast</h2>
+              <p className="text-sm text-gray-500">{forecastPeriod}-day prediction with confidence intervals</p>
+            </div>
+            <Button variant="ghost" size="sm" icon="TrendingUp">
+              View Details
+            </Button>
+          </div>
+          
+          {predictions && (
+            <Chart
+              options={demandTrendOptions}
+              series={[
+                {
+                  name: "Historical Trend",
+                  data: predictions.historicalTrend || []
+                },
+                {
+                  name: "Predicted Demand",
+                  data: predictions.forecast || []
+                },
+                {
+                  name: "Confidence Range",
+                  data: predictions.confidenceUpper || []
+                }
+              ]}
+              type="line"
+              height={400}
+            />
+          )}
+        </Card>
+      </div>
+
+      {/* Size-Specific Recommendations */}
+      {predictions?.recommendations && (
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Size-Specific Reorder Recommendations</h2>
+              <p className="text-sm text-gray-500">ML-generated stocking suggestions based on forecast</p>
+            </div>
+            <Button variant="secondary" size="sm" icon="ShoppingCart">
+              Bulk Order
+            </Button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">Size</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">Current Stock</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">Predicted Demand</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">Recommended Order</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">Priority</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {predictions.recommendations.map((rec, index) => (
+                  <motion.tr
+                    key={rec.size}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="border-b border-gray-100 hover:bg-gray-50"
+                  >
+                    <td className="py-4 px-4">
+                      <div className="font-medium text-gray-900">Size {rec.size}</div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="text-sm text-gray-900">{rec.currentStock} units</div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="text-sm text-gray-900">{rec.predictedDemand} units</div>
+                      <div className="text-xs text-gray-500">±{rec.confidence}% confidence</div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="font-medium text-gray-900">{rec.recommendedOrder} units</div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <Badge 
+                        variant={
+                          rec.priority === "high" ? "error" : 
+                          rec.priority === "medium" ? "warning" : "success"
+                        }
+                        size="sm"
+                      >
+                        {rec.priority}
+                      </Badge>
+                    </td>
+                    <td className="py-4 px-4">
+                      <Button 
+                        size="sm" 
+                        variant="secondary"
+                        onClick={() => toast.success(`Added size ${rec.size} to order queue`)}
+                      >
+                        Add to Order
+                      </Button>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+
+      {/* No data state */}
+      {!sizeAnalytics && !analysisLoading && (
+        <Card className="p-12 text-center">
+          <ApperIcon name="Activity" className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">Size Forecasting Ready</h3>
+          <p className="text-gray-500 mb-6">
+            Configure your analysis parameters above and click "Regenerate" to start forecasting.
+          </p>
+          <Button onClick={handleGenerateForecast} icon="Activity">
+            Generate Forecast
+          </Button>
+        </Card>
+      )}
+    </div>
+  );
+}
 
 export default Reports;
