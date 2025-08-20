@@ -70,16 +70,21 @@ const getPageTitle = (pathname) => {
           </Routes>
         </div>
 
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
+<ToastContainer
+          position="top-center"
+          autoClose={4000}
           hideProgressBar={false}
-          newestOnTop={false}
+          newestOnTop={true}
           closeOnClick
           rtl={false}
-          pauseOnFocusLoss
+          pauseOnFocusLoss={false}
           draggable
           pauseOnHover
+          theme="light"
+          style={{ zIndex: 99999 }}
+          toastClassName="!relative !transform-none !top-0 !left-0 !right-0 !bottom-auto !w-auto !max-w-md !mx-auto !mt-4"
+          bodyClassName="!text-sm !font-medium"
+          progressClassName="!bg-white/30"
         />
       </div>
     </BrowserRouter>
