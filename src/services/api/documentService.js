@@ -5,266 +5,353 @@ class DocumentServiceClass {
   constructor() {
     this.documents = [...mockDocuments];
     this.communications = [...mockCommunications];
-    this.nextId = Math.max(...this.documents.map(doc => doc.Id), 0) + 1;
-    this.nextCommId = Math.max(...this.communications.map(comm => comm.Id), 0) + 1;
+    this.grnCounter = 1;
   }
 
+  // Generate GRN number in format GRN-YYYY-XXXXXX
+  generateGRNNumber() {
+    const year = new Date().getFullYear();
+    const sequence = String(this.grnCounter++).padStart(6, '0');
+    return `GRN-${year}-${sequence}`;
+  }
+
+  // Calculate lead time performance
+  calculateLeadTime(orderDate, expectedDate, receivedDate) {
+    const ordered = new Date(orderDate);
+    const expected = new Date(expectedDate);
+    const received = new Date(receivedDate);
+    
+    const actualLeadTime = Math.ceil((received - ordered) / (1000 * 60 * 60 * 24));
+    const expectedLeadTime = Math.ceil((expected - ordered) / (1000 * 60 * 60 * 24));
+    const variance = actualLeadTime - expectedLeadTime;
+    
+    return {
+      actualLeadTime,
+      expectedLeadTime,
+      variance,
+      performance: variance <= 0 ? 'On Time' : variance <= 2 ? 'Acceptable' : 'Late'
+    };
+  }
+
+  // Create GRN document automatically
+  async createGRN(purchaseOrder, receivedItems) {
+    await new Promise(resolve => setTimeout(resolve, 400));
+    
+    const grnNumber = this.generateGRNNumber();
+    const receivedDate = new Date().toISOString();
+    const leadTimeAnalysis = this.calculateLeadTime(
+      purchaseOrder.orderDate,
+      purchaseOrder.expectedDate,
+      receivedDate
+    );
+
+    // Calculate totals
+    const totalReceivedQty = receivedItems.reduce((sum, item) => sum + item.receivedQty, 0);
+    const totalOrderedQty = purchaseOrder.items.reduce((sum, item) => sum + item.orderedQty, 0);
+    const totalReceivedValue = receivedItems.reduce((sum, item) => sum + (item.receivedQty * item.unitCost), 0);
+
+    // Create GRN document content
+    const grnContent = {
+      grnNumber,
+      purchaseOrderId: purchaseOrder.Id,
+      supplier: {
+        name: purchaseOrder.supplier,
+        supplierId: purchaseOrder.supplierId || purchaseOrder.supplier.toLowerCase().replace(/[^a-z0-9]/g, '')
+      },
+      orderDetails: {
+        orderDate: purchaseOrder.orderDate,
+        expectedDate: purchaseOrder.expectedDate,
+        receivedDate,
+        totalCost: purchaseOrder.totalCost
+      },
+      receivedItems: receivedItems.map(item => ({
+        productId: item.productId,
+        name: item.name,
+        barcode: item.barcode,
+        size: item.size,
+        orderedQty: item.orderedQty,
+        receivedQty: item.receivedQty,
+        unitCost: item.unitCost,
+        totalCost: item.receivedQty * item.unitCost,
+        variance: item.receivedQty - item.orderedQty,
+        status: item.receivedQty === item.orderedQty ? 'Complete' : item.receivedQty > item.orderedQty ? 'Over-received' : 'Under-received'
+      })),
+      summary: {
+        totalItemsOrdered: purchaseOrder.items.length,
+        totalItemsReceived: receivedItems.length,
+        totalOrderedQty,
+        totalReceivedQty,
+        totalReceivedValue,
+        completionRate: Math.round((totalReceivedQty / totalOrderedQty) * 100)
+      },
+      leadTimeAnalysis,
+      qualityNotes: [],
+      receivedBy: 'System User', // In real app, this would be current user
+      createdAt: receivedDate
+    };
+
+    // Store as document
+    const newId = Math.max(...this.documents.map(doc => doc.Id)) + 1;
+    const grnDocument = {
+      Id: newId,
+      name: `${grnNumber}.json`,
+      size: JSON.stringify(grnContent).length,
+      type: 'application/json',
+      category: 'grn',
+      supplierId: grnContent.supplier.supplierId,
+      supplier: grnContent.supplier.name,
+      description: `Goods Received Note for PO-${purchaseOrder.Id} from ${purchaseOrder.supplier}. Lead time: ${leadTimeAnalysis.actualLeadTime} days (${leadTimeAnalysis.performance})`,
+      uploadedAt: receivedDate,
+      updatedAt: receivedDate,
+      grnContent // Store the actual GRN data
+    };
+
+    this.documents.push(grnDocument);
+    return { ...grnDocument };
+  }
+
+  // Get all GRN documents
+  async getGRNs() {
+    await new Promise(resolve => setTimeout(resolve, 250));
+    return this.documents.filter(doc => doc.category === 'grn');
+  }
+
+  // Get GRNs by supplier
+  async getGRNsBySupplier(supplierId) {
+    await new Promise(resolve => setTimeout(resolve, 250));
+    return this.documents.filter(doc => doc.category === 'grn' && doc.supplierId === supplierId);
+  }
+
+  // Get GRN analytics
+  async getGRNAnalytics() {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const grns = this.documents.filter(doc => doc.category === 'grn' && doc.grnContent);
+    
+    const analytics = {
+      totalGRNs: grns.length,
+      avgLeadTime: 0,
+      onTimeDeliveries: 0,
+      lateDeliveries: 0,
+      supplierPerformance: {},
+      monthlyTrends: {}
+    };
+
+    if (grns.length > 0) {
+      let totalLeadTime = 0;
+      grns.forEach(grn => {
+        const leadTime = grn.grnContent.leadTimeAnalysis;
+        totalLeadTime += leadTime.actualLeadTime;
+        
+        if (leadTime.performance === 'On Time' || leadTime.performance === 'Acceptable') {
+          analytics.onTimeDeliveries++;
+        } else {
+          analytics.lateDeliveries++;
+        }
+
+        // Supplier performance tracking
+        const supplier = grn.supplier;
+        if (!analytics.supplierPerformance[supplier]) {
+          analytics.supplierPerformance[supplier] = {
+            totalDeliveries: 0,
+            onTimeDeliveries: 0,
+            avgLeadTime: 0,
+            totalLeadTime: 0
+          };
+        }
+        
+        analytics.supplierPerformance[supplier].totalDeliveries++;
+        analytics.supplierPerformance[supplier].totalLeadTime += leadTime.actualLeadTime;
+        analytics.supplierPerformance[supplier].avgLeadTime = 
+          analytics.supplierPerformance[supplier].totalLeadTime / analytics.supplierPerformance[supplier].totalDeliveries;
+        
+        if (leadTime.performance === 'On Time' || leadTime.performance === 'Acceptable') {
+          analytics.supplierPerformance[supplier].onTimeDeliveries++;
+        }
+      });
+
+      analytics.avgLeadTime = totalLeadTime / grns.length;
+    }
+
+    return analytics;
+  }
+
+  // Document Methods
   async getAll() {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
+    await new Promise(resolve => setTimeout(resolve, 300));
     return [...this.documents];
   }
 
   async getById(id) {
-    if (!Number.isInteger(id) || id <= 0) {
-      throw new Error('Invalid document ID');
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const document = this.documents.find(doc => doc.Id === id);
-    
+    await new Promise(resolve => setTimeout(resolve, 200));
+    const document = this.documents.find(doc => doc.Id === parseInt(id));
     if (!document) {
       throw new Error('Document not found');
     }
-    
     return { ...document };
   }
 
   async getBySupplier(supplierId) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return this.documents
-      .filter(doc => doc.supplierId === supplierId)
-      .map(doc => ({ ...doc }));
+    await new Promise(resolve => setTimeout(resolve, 250));
+    return this.documents.filter(doc => doc.supplierId === supplierId);
   }
 
   async getByCategory(category) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return this.documents
-      .filter(doc => doc.category === category)
-      .map(doc => ({ ...doc }));
+    await new Promise(resolve => setTimeout(resolve, 200));
+    return this.documents.filter(doc => doc.category === category);
   }
 
   async create(documentData) {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const newId = Math.max(...this.documents.map(doc => doc.Id)) + 1;
     const newDocument = {
       ...documentData,
-      Id: this.nextId++,
+      Id: newId,
       uploadedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    
-    this.documents.unshift(newDocument);
+    this.documents.push(newDocument);
     return { ...newDocument };
   }
 
   async update(id, updateData) {
-    if (!Number.isInteger(id) || id <= 0) {
-      throw new Error('Invalid document ID');
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const index = this.documents.findIndex(doc => doc.Id === id);
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const index = this.documents.findIndex(doc => doc.Id === parseInt(id));
     if (index === -1) {
       throw new Error('Document not found');
     }
-    
-    const updatedDocument = {
+    this.documents[index] = {
       ...this.documents[index],
       ...updateData,
-      Id: id, // Ensure ID doesn't change
+      Id: parseInt(id),
       updatedAt: new Date().toISOString()
     };
-    
-    this.documents[index] = updatedDocument;
-    return { ...updatedDocument };
+    return { ...this.documents[index] };
   }
 
   async delete(id) {
-    if (!Number.isInteger(id) || id <= 0) {
-      throw new Error('Invalid document ID');
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 600));
-    
-    const index = this.documents.findIndex(doc => doc.Id === id);
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const index = this.documents.findIndex(doc => doc.Id === parseInt(id));
     if (index === -1) {
       throw new Error('Document not found');
     }
-    
-    const deletedDocument = this.documents.splice(index, 1)[0];
-    return { ...deletedDocument };
+    const deletedDocument = { ...this.documents[index] };
+    this.documents.splice(index, 1);
+    return deletedDocument;
   }
 
   async search(query) {
-    await new Promise(resolve => setTimeout(resolve, 400));
-    
+    await new Promise(resolve => setTimeout(resolve, 250));
     const searchTerm = query.toLowerCase();
-    return this.documents
-      .filter(doc => 
-        doc.name.toLowerCase().includes(searchTerm) ||
-        doc.supplier.toLowerCase().includes(searchTerm) ||
-        doc.description.toLowerCase().includes(searchTerm) ||
-        doc.category.toLowerCase().includes(searchTerm)
-      )
-      .map(doc => ({ ...doc }));
+    return this.documents.filter(doc =>
+      doc.name.toLowerCase().includes(searchTerm) ||
+      doc.description.toLowerCase().includes(searchTerm) ||
+      doc.supplier.toLowerCase().includes(searchTerm) ||
+      doc.category.toLowerCase().includes(searchTerm)
+    );
   }
 
   async getStats() {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const totalDocuments = this.documents.length;
-    const categories = {};
-    const suppliers = {};
-    let totalSize = 0;
-    
-    this.documents.forEach(doc => {
-      categories[doc.category] = (categories[doc.category] || 0) + 1;
-      suppliers[doc.supplier] = (suppliers[doc.supplier] || 0) + 1;
-      totalSize += doc.size || 0;
-    });
-    
-    const recentUploads = this.documents.filter(doc => {
-      const uploadDate = new Date(doc.uploadedAt);
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      return uploadDate > weekAgo;
-    }).length;
-    
-return {
-      totalDocuments,
-      categories,
-      suppliers,
-      totalSize,
-      recentUploads
+    await new Promise(resolve => setTimeout(resolve, 200));
+    const stats = {
+      total: this.documents.length,
+      byCategory: {},
+      bySupplier: {},
+      totalSize: this.documents.reduce((sum, doc) => sum + doc.size, 0)
     };
+
+    this.documents.forEach(doc => {
+      stats.byCategory[doc.category] = (stats.byCategory[doc.category] || 0) + 1;
+      stats.bySupplier[doc.supplier] = (stats.bySupplier[doc.supplier] || 0) + 1;
+    });
+
+    return stats;
   }
 
-  // Communication Log Methods
+  // Communication Methods
   async getCommunications() {
-    await new Promise(resolve => setTimeout(resolve, 600));
+    await new Promise(resolve => setTimeout(resolve, 300));
     return [...this.communications];
   }
 
   async getCommunicationById(id) {
-    if (!Number.isInteger(id) || id <= 0) {
-      throw new Error('Invalid communication ID');
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const communication = this.communications.find(comm => comm.Id === id);
-    
+    await new Promise(resolve => setTimeout(resolve, 200));
+    const communication = this.communications.find(comm => comm.Id === parseInt(id));
     if (!communication) {
       throw new Error('Communication not found');
     }
-    
     return { ...communication };
   }
 
   async getCommunicationsBySupplier(supplierId) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return this.communications
-      .filter(comm => comm.supplierId === supplierId)
-      .map(comm => ({ ...comm }));
+    await new Promise(resolve => setTimeout(resolve, 250));
+    return this.communications.filter(comm => comm.supplierId === supplierId);
   }
 
   async createCommunication(communicationData) {
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const newId = Math.max(...this.communications.map(comm => comm.Id)) + 1;
     const newCommunication = {
       ...communicationData,
-      Id: this.nextCommId++,
+      Id: newId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    
-    this.communications.unshift(newCommunication);
+    this.communications.push(newCommunication);
     return { ...newCommunication };
   }
 
   async updateCommunication(id, updateData) {
-    if (!Number.isInteger(id) || id <= 0) {
-      throw new Error('Invalid communication ID');
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 600));
-    
-    const index = this.communications.findIndex(comm => comm.Id === id);
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const index = this.communications.findIndex(comm => comm.Id === parseInt(id));
     if (index === -1) {
       throw new Error('Communication not found');
     }
-    
-    const updatedCommunication = {
+    this.communications[index] = {
       ...this.communications[index],
       ...updateData,
-      Id: id, // Ensure ID doesn't change
+      Id: parseInt(id),
       updatedAt: new Date().toISOString()
     };
-    
-    this.communications[index] = updatedCommunication;
-    return { ...updatedCommunication };
+    return { ...this.communications[index] };
   }
 
   async deleteCommunication(id) {
-    if (!Number.isInteger(id) || id <= 0) {
-      throw new Error('Invalid communication ID');
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 400));
-    
-    const index = this.communications.findIndex(comm => comm.Id === id);
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const index = this.communications.findIndex(comm => comm.Id === parseInt(id));
     if (index === -1) {
       throw new Error('Communication not found');
     }
-    
-    const deletedCommunication = this.communications.splice(index, 1)[0];
-    return { ...deletedCommunication };
+    const deletedCommunication = { ...this.communications[index] };
+    this.communications.splice(index, 1);
+    return deletedCommunication;
   }
 
   async searchCommunications(query) {
-    await new Promise(resolve => setTimeout(resolve, 400));
-    
+    await new Promise(resolve => setTimeout(resolve, 250));
     const searchTerm = query.toLowerCase();
-    return this.communications
-      .filter(comm => 
-        comm.subject.toLowerCase().includes(searchTerm) ||
-        comm.content.toLowerCase().includes(searchTerm) ||
-        comm.supplierName.toLowerCase().includes(searchTerm) ||
-        comm.contactPerson.toLowerCase().includes(searchTerm) ||
-        comm.type.toLowerCase().includes(searchTerm)
-      )
-      .map(comm => ({ ...comm }));
+    return this.communications.filter(comm =>
+      comm.subject.toLowerCase().includes(searchTerm) ||
+      comm.message.toLowerCase().includes(searchTerm) ||
+      comm.supplier.toLowerCase().includes(searchTerm)
+    );
   }
 
   async getCommunicationStats() {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const totalCommunications = this.communications.length;
-    const types = {};
-    const suppliers = {};
-    const statuses = {};
-    
-    this.communications.forEach(comm => {
-      types[comm.type] = (types[comm.type] || 0) + 1;
-      suppliers[comm.supplierName] = (suppliers[comm.supplierName] || 0) + 1;
-      statuses[comm.status] = (statuses[comm.status] || 0) + 1;
-    });
-    
-    const recentCommunications = this.communications.filter(comm => {
-      const commDate = new Date(comm.createdAt);
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      return commDate > weekAgo;
-    }).length;
-    
-return {
-      totalCommunications,
-      types,
-      suppliers,
-      statuses,
-      recentCommunications
+    await new Promise(resolve => setTimeout(resolve, 200));
+    const stats = {
+      total: this.communications.length,
+      byType: {},
+      byStatus: {},
+      byPriority: {}
     };
+
+    this.communications.forEach(comm => {
+      stats.byType[comm.type] = (stats.byType[comm.type] || 0) + 1;
+      stats.byStatus[comm.status] = (stats.byStatus[comm.status] || 0) + 1;
+      stats.byPriority[comm.priority] = (stats.byPriority[comm.priority] || 0) + 1;
+    });
+
+    return stats;
   }
 }
 

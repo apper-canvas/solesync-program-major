@@ -1,16 +1,19 @@
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
-import Card from "@/components/atoms/Card";
-import Button from "@/components/atoms/Button";
-import Badge from "@/components/atoms/Badge";
-import Input from "@/components/atoms/Input";
-import Loading from "@/components/ui/Loading";
+import documentService from "@/services/api/documentService";
+import { PurchaseOrderService, getPending } from "@/services/api/purchaseOrderService";
+import transactionService from "@/services/api/transactionService";
+import { InventoryService } from "@/services/api/inventoryService";
+import ApperIcon from "@/components/ApperIcon";
+import Receiving from "@/components/pages/Receiving";
 import Error from "@/components/ui/Error";
 import Empty from "@/components/ui/Empty";
-import ApperIcon from "@/components/ApperIcon";
-import { PurchaseOrderService } from "@/services/api/purchaseOrderService";
-import { InventoryService } from "@/services/api/inventoryService";
+import Loading from "@/components/ui/Loading";
+import Button from "@/components/atoms/Button";
+import Card from "@/components/atoms/Card";
+import Badge from "@/components/atoms/Badge";
+import Input from "@/components/atoms/Input";
 
 const ReceivingInterface = () => {
   const [orders, setOrders] = useState([]);
@@ -81,7 +84,7 @@ const ReceivingInterface = () => {
     }
   };
 
-  const processReceiving = async () => {
+const processReceiving = async () => {
     if (!selectedOrder || receivingItems.length === 0) {
       toast.error("No items to receive");
       return;
@@ -100,14 +103,30 @@ const ReceivingInterface = () => {
       }
 
       // Update purchase order status
-      await PurchaseOrderService.update(selectedOrder.Id, {
+      const updatedOrder = await PurchaseOrderService.update(selectedOrder.Id, {
         ...selectedOrder,
         status: "received",
         receivedDate: new Date().toISOString(),
         receivedItems: receivingItems
       });
 
-      toast.success("Receiving completed successfully!");
+      // Generate GRN automatically
+      try {
+        const grn = await documentService.createGRN(selectedOrder, receivingItems);
+        toast.success(`Receiving completed! GRN ${grn.grnContent.grnNumber} generated automatically.`);
+        
+        // Calculate lead time performance for additional feedback
+        const leadTimeAnalysis = grn.grnContent.leadTimeAnalysis;
+        if (leadTimeAnalysis.performance === 'Late') {
+          toast.warning(`Delivery was ${leadTimeAnalysis.variance} days late. Expected lead time: ${leadTimeAnalysis.expectedLeadTime} days.`);
+        } else if (leadTimeAnalysis.performance === 'On Time') {
+          toast.info(`Great! Delivery arrived on time with ${leadTimeAnalysis.actualLeadTime} day lead time.`);
+        }
+      } catch (grnError) {
+        console.error("GRN generation error:", grnError);
+        toast.warning("Receiving completed but GRN generation failed. Please generate manually.");
+      }
+
       setSelectedOrder(null);
       setReceivingItems([]);
       loadPendingOrders();
