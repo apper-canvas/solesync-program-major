@@ -11,6 +11,7 @@ const navigationItems = [
     { path: "/inventory", icon: "Package", label: "Inventory" },
     { path: "/pos", icon: "ShoppingCart", label: "Point of Sale" },
     { path: "/receiving", icon: "Truck", label: "Receiving" },
+    { path: "/fulfillment", icon: "MapPin", label: "Fulfillment" },
     { path: "/suppliers", icon: "Users", label: "Supplier Portal" },
     { path: "/reports", icon: "BarChart3", label: "Reports" },
     { path: "/sync", icon: "RefreshCw", label: "Sync" },

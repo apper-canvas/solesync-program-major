@@ -9,6 +9,7 @@ import Dashboard from "@/components/pages/Dashboard";
 import Inventory from "@/components/pages/Inventory";
 import POS from "@/components/pages/POS";
 import Receiving from "@/components/pages/Receiving";
+import Fulfillment from "@/components/pages/Fulfillment";
 import Reports from "@/components/pages/Reports";
 import Sync from "@/components/pages/Sync";
 import Settings from "@/components/pages/Settings";
@@ -22,6 +23,7 @@ const getPageTitle = (pathname) => {
       case "/inventory": return "Inventory Management";
       case "/pos": return "Point of Sale";
       case "/receiving": return "Receiving & Stock";
+      case "/fulfillment": return "Fulfillment Command Center";
       case "/reports": return "Reports & Analytics";
       case "/sync": return "Sync Management";
       case "/settings": return "Settings";
@@ -48,10 +50,11 @@ const getPageTitle = (pathname) => {
                 />
                 <main className="p-6">
 <Routes>
-                    <Route path="/" element={<Dashboard />} />
+<Route path="/" element={<Dashboard />} />
                     <Route path="/inventory" element={<Inventory />} />
                     <Route path="/pos" element={<POS />} />
                     <Route path="/receiving" element={<Receiving />} />
+                    <Route path="/fulfillment" element={<Fulfillment />} />
                     <Route path="/reports" element={<Reports />} />
                     <Route path="/sync" element={<Sync />} />
                     <Route path="/settings" element={<Settings />} />

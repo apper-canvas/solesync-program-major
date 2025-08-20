@@ -1,0 +1,333 @@
+[
+  {
+    "Id": 1,
+    "orderNumber": "ORD000001",
+    "customerName": "John Smith",
+    "customerEmail": "john.smith@email.com",
+    "customerPhone": "(555) 123-4567",
+    "fulfillmentType": "ship-from-store",
+    "status": "pending",
+    "orderDate": "2024-01-15T10:30:00Z",
+    "dueDate": "2024-01-18T17:00:00Z",
+    "shippingAddress": {
+      "street": "123 Main St",
+      "city": "Anytown",
+      "state": "CA",
+      "zipCode": "12345"
+    },
+    "items": [
+      {
+        "Id": 1,
+        "productName": "Nike Air Max 270",
+        "sku": "NKE-AM270-BLK-10",
+        "size": "10",
+        "color": "Black",
+        "quantity": 1,
+        "price": 149.99
+      },
+      {
+        "Id": 2,
+        "productName": "Nike Dri-FIT T-Shirt",
+        "sku": "NKE-DF-TEE-WHT-L",
+        "size": "L",
+        "color": "White",
+        "quantity": 2,
+        "price": 29.99
+      }
+    ],
+    "total": 209.97,
+    "shippingCost": 9.99,
+    "notes": "Customer requested expedited shipping"
+  },
+  {
+    "Id": 2,
+    "orderNumber": "ORD000002",
+    "customerName": "Sarah Johnson",
+    "customerEmail": "sarah.j@email.com",
+    "customerPhone": "(555) 234-5678",
+    "fulfillmentType": "click-and-collect",
+    "status": "ready",
+    "orderDate": "2024-01-15T14:15:00Z",
+    "dueDate": "2024-01-17T18:00:00Z",
+    "pickupLocation": "Main Store",
+    "items": [
+      {
+        "Id": 3,
+        "productName": "Adidas Ultraboost 22",
+        "sku": "ADI-UB22-WHT-8.5",
+        "size": "8.5",
+        "color": "White",
+        "quantity": 1,
+        "price": 179.99
+      }
+    ],
+    "total": 179.99,
+    "notes": "Customer will pick up after 3 PM"
+  },
+  {
+    "Id": 3,
+    "orderNumber": "ORD000003",
+    "customerName": "Michael Davis",
+    "customerEmail": "m.davis@email.com",
+    "customerPhone": "(555) 345-6789",
+    "fulfillmentType": "store-reservation",
+    "status": "processing",
+    "orderDate": "2024-01-16T09:45:00Z",
+    "dueDate": "2024-01-19T19:00:00Z",
+    "reservationDate": "2024-01-19T15:00:00Z",
+    "items": [
+      {
+        "Id": 4,
+        "productName": "New Balance 990v5",
+        "sku": "NB-990V5-GRY-11",
+        "size": "11",
+        "color": "Grey",
+        "quantity": 1,
+        "price": 199.99
+      },
+      {
+        "Id": 5,
+        "productName": "Athletic Socks Pack",
+        "sku": "ATH-SOX-BLK-L",
+        "size": "L",
+        "color": "Black",
+        "quantity": 3,
+        "price": 19.99
+      }
+    ],
+    "total": 259.96,
+    "notes": "Reserved for weekend pickup"
+  },
+  {
+    "Id": 4,
+    "orderNumber": "ORD000004",
+    "customerName": "Emma Wilson",
+    "customerEmail": "emma.wilson@email.com",
+    "customerPhone": "(555) 456-7890",
+    "fulfillmentType": "ship-from-store",
+    "status": "shipped",
+    "orderDate": "2024-01-14T16:20:00Z",
+    "dueDate": "2024-01-17T17:00:00Z",
+    "shippedDate": "2024-01-16T10:00:00Z",
+    "trackingNumber": "1Z999AA1234567890",
+    "shippingAddress": {
+      "street": "456 Oak Ave",
+      "city": "Springfield",
+      "state": "NY",
+      "zipCode": "67890"
+    },
+    "items": [
+      {
+        "Id": 6,
+        "productName": "Converse Chuck Taylor All Star",
+        "sku": "CNV-CT-AS-RED-7",
+        "size": "7",
+        "color": "Red",
+        "quantity": 1,
+        "price": 89.99
+      }
+    ],
+    "total": 89.99,
+    "shippingCost": 7.99,
+    "notes": "Signature required on delivery"
+  },
+  {
+    "Id": 5,
+    "orderNumber": "ORD000005",
+    "customerName": "David Brown",
+    "customerEmail": "david.brown@email.com",
+    "customerPhone": "(555) 567-8901",
+    "fulfillmentType": "click-and-collect",
+    "status": "completed",
+    "orderDate": "2024-01-13T11:30:00Z",
+    "dueDate": "2024-01-15T18:00:00Z",
+    "completedDate": "2024-01-15T14:30:00Z",
+    "pickupLocation": "Main Store",
+    "items": [
+      {
+        "Id": 7,
+        "productName": "Vans Old Skool",
+        "sku": "VNS-OS-BLK-9",
+        "size": "9",
+        "color": "Black",
+        "quantity": 1,
+        "price": 69.99
+      },
+      {
+        "Id": 8,
+        "productName": "Vans Classic Crew Socks",
+        "sku": "VNS-CC-SOX-WHT-M",
+        "size": "M",
+        "color": "White",
+        "quantity": 2,
+        "price": 12.99
+      }
+    ],
+    "total": 95.97,
+    "notes": "Customer picked up on schedule"
+  },
+  {
+    "Id": 6,
+    "orderNumber": "ORD000006",
+    "customerName": "Lisa Garcia",
+    "customerEmail": "lisa.garcia@email.com",
+    "customerPhone": "(555) 678-9012",
+    "fulfillmentType": "ship-from-store",
+    "status": "processing",
+    "orderDate": "2024-01-16T13:45:00Z",
+    "dueDate": "2024-01-20T17:00:00Z",
+    "shippingAddress": {
+      "street": "789 Pine St",
+      "city": "Oakland",
+      "state": "CA",
+      "zipCode": "54321"
+    },
+    "items": [
+      {
+        "Id": 9,
+        "productName": "Puma RS-X",
+        "sku": "PMA-RSX-WHT-8",
+        "size": "8",
+        "color": "White/Blue",
+        "quantity": 1,
+        "price": 129.99
+      },
+      {
+        "Id": 10,
+        "productName": "Puma Training Shorts",
+        "sku": "PMA-TR-SHT-BLK-M",
+        "size": "M",
+        "color": "Black",
+        "quantity": 1,
+        "price": 39.99
+      }
+    ],
+    "total": 169.98,
+    "shippingCost": 8.99,
+    "notes": "Standard shipping requested"
+  },
+  {
+    "Id": 7,
+    "orderNumber": "ORD000007",
+    "customerName": "Robert Taylor",
+    "customerEmail": "r.taylor@email.com",
+    "customerPhone": "(555) 789-0123",
+    "fulfillmentType": "store-reservation",
+    "status": "pending",
+    "orderDate": "2024-01-16T15:20:00Z",
+    "dueDate": "2024-01-21T18:00:00Z",
+    "reservationDate": "2024-01-20T16:00:00Z",
+    "items": [
+      {
+        "Id": 11,
+        "productName": "Jordan 1 Mid",
+        "sku": "JRD-1MID-BRD-10.5",
+        "size": "10.5",
+        "color": "Bred",
+        "quantity": 1,
+        "price": 159.99
+      }
+    ],
+    "total": 159.99,
+    "notes": "High-demand item reservation"
+  },
+  {
+    "Id": 8,
+    "orderNumber": "ORD000008",
+    "customerName": "Jennifer Martinez",
+    "customerEmail": "j.martinez@email.com",
+    "customerPhone": "(555) 890-1234",
+    "fulfillmentType": "click-and-collect",
+    "status": "processing",
+    "orderDate": "2024-01-16T17:10:00Z",
+    "dueDate": "2024-01-18T18:00:00Z",
+    "pickupLocation": "Main Store",
+    "items": [
+      {
+        "Id": 12,
+        "productName": "Reebok Classic Leather",
+        "sku": "RBK-CL-LTR-WHT-7.5",
+        "size": "7.5",
+        "color": "White",
+        "quantity": 1,
+        "price": 79.99
+      },
+      {
+        "Id": 13,
+        "productName": "Sports Water Bottle",
+        "sku": "ACC-WB-BLU-500",
+        "size": "500ml",
+        "color": "Blue",
+        "quantity": 1,
+        "price": 24.99
+      }
+    ],
+    "total": 104.98,
+    "notes": "Customer prefers afternoon pickup"
+  },
+  {
+    "Id": 9,
+    "orderNumber": "ORD000009",
+    "customerName": "Christopher Lee",
+    "customerEmail": "chris.lee@email.com",
+    "customerPhone": "(555) 901-2345",
+    "fulfillmentType": "ship-from-store",
+    "status": "cancelled",
+    "orderDate": "2024-01-15T12:00:00Z",
+    "cancelledDate": "2024-01-16T09:00:00Z",
+    "shippingAddress": {
+      "street": "321 Elm St",
+      "city": "Portland",
+      "state": "OR",
+      "zipCode": "97201"
+    },
+    "items": [
+      {
+        "Id": 14,
+        "productName": "Under Armour Hovr Phantom",
+        "sku": "UA-HP-BLK-11.5",
+        "size": "11.5",
+        "color": "Black",
+        "quantity": 1,
+        "price": 139.99
+      }
+    ],
+    "total": 139.99,
+    "shippingCost": 9.99,
+    "notes": "Customer requested cancellation - size not available"
+  },
+  {
+    "Id": 10,
+    "orderNumber": "ORD000010",
+    "customerName": "Amanda White",
+    "customerEmail": "amanda.white@email.com",
+    "customerPhone": "(555) 012-3456",
+    "fulfillmentType": "click-and-collect",
+    "status": "ready",
+    "orderDate": "2024-01-15T08:30:00Z",
+    "dueDate": "2024-01-17T19:00:00Z",
+    "pickupLocation": "Main Store",
+    "items": [
+      {
+        "Id": 15,
+        "productName": "ASICS Gel-Kayano 29",
+        "sku": "ASI-GK29-BLU-8.5",
+        "size": "8.5",
+        "color": "Blue",
+        "quantity": 1,
+        "price": 169.99
+      },
+      {
+        "Id": 16,
+        "productName": "Running Insoles",
+        "sku": "ACC-INS-RUN-M",
+        "size": "M",
+        "color": "Clear",
+        "quantity": 1,
+        "price": 29.99
+      }
+    ],
+    "total": 199.98,
+    "notes": "Ready for pickup - customer notified"
+  }
+]
