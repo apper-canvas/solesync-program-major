@@ -6,11 +6,12 @@ import StatusIndicator from "@/components/molecules/StatusIndicator";
 const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
 
-  const navigationItems = [
+const navigationItems = [
     { path: "/", icon: "Home", label: "Dashboard" },
     { path: "/inventory", icon: "Package", label: "Inventory" },
     { path: "/pos", icon: "ShoppingCart", label: "Point of Sale" },
     { path: "/receiving", icon: "Truck", label: "Receiving" },
+    { path: "/suppliers", icon: "Users", label: "Supplier Portal" },
     { path: "/reports", icon: "BarChart3", label: "Reports" },
     { path: "/sync", icon: "RefreshCw", label: "Sync" },
     { path: "/settings", icon: "Settings", label: "Settings" }
