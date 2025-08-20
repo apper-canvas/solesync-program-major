@@ -37,7 +37,8 @@ const newCustomer = {
       loyaltyPoints: 0,
       rewardsBalance: 0,
       tierProgress: 0,
-      redemptionHistory: []
+      redemptionHistory: [],
+      feedback: []
     };
     
     customerData.push(newCustomer);
@@ -150,6 +151,85 @@ async getActiveCustomers() {
     }, {});
     
     return { totalCustomers, totalPoints, tierDistribution };
+},
+
+  // Feedback Management
+  async getCustomerFeedback(customerId) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const customer = customers.find(c => c.Id === customerId);
+        if (customer) {
+          resolve(customer.feedback || []);
+        } else {
+          resolve([]);
+        }
+      }, 300);
+    });
+  },
+
+  async addCustomerFeedback(customerId, feedbackData) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const customer = customers.find(c => c.Id === customerId);
+        if (customer) {
+          if (!customer.feedback) {
+            customer.feedback = [];
+          }
+          const newFeedback = {
+            ...feedbackData,
+            Id: Date.now() + Math.random(), // Simple ID generation
+            createdAt: new Date().toISOString()
+          };
+          customer.feedback.unshift(newFeedback);
+          resolve(newFeedback);
+        } else {
+          reject(new Error('Customer not found'));
+        }
+      }, 300);
+    });
+  },
+
+  async updateFeedbackStatus(feedbackId, status) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        let feedbackFound = false;
+        for (const customer of customers) {
+          if (customer.feedback) {
+            const feedback = customer.feedback.find(f => f.Id === feedbackId);
+            if (feedback) {
+              feedback.status = status;
+              feedback.updatedAt = new Date().toISOString();
+              feedbackFound = true;
+              resolve(feedback);
+              break;
+            }
+          }
+        }
+        if (!feedbackFound) {
+          reject(new Error('Feedback not found'));
+        }
+      }, 300);
+    });
+  },
+
+  async getAllFeedback() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const allFeedback = [];
+        customers.forEach(customer => {
+          if (customer.feedback) {
+            customer.feedback.forEach(feedback => {
+              allFeedback.push({
+                ...feedback,
+                customerName: `${customer.firstName} ${customer.lastName}`,
+                customerEmail: customer.email
+              });
+            });
+          }
+        });
+        resolve(allFeedback.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+      }, 300);
+    });
   }
 };
 

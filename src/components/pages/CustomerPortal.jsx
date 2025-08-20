@@ -54,6 +54,19 @@ const [newCustomer, setNewCustomer] = useState({
   const [pointsToAward, setPointsToAward] = useState('');
   const [rewardToRedeem, setRewardToRedeem] = useState('');
 
+  // Feedback Management State
+  const [feedbackView, setFeedbackView] = useState(false);
+  const [selectedCustomerFeedback, setSelectedCustomerFeedback] = useState(null);
+  const [customerFeedback, setCustomerFeedback] = useState([]);
+  const [showAddFeedbackForm, setShowAddFeedbackForm] = useState(false);
+  const [newFeedback, setNewFeedback] = useState({
+    rating: 5,
+    subject: '',
+    message: '',
+    category: 'general',
+    priority: 'medium'
+  });
+  const [feedbackFilter, setFeedbackFilter] = useState('all');
   const rewardOptions = [
     { value: 10, label: '$1 Store Credit', cost: 10 },
     { value: 50, label: '$5 Store Credit', cost: 50 },
@@ -199,6 +212,63 @@ function showDeleteConfirmation(customer) {
       console.error('Error deleting customer:', err);
       toast.error('Failed to delete customer');
     }
+}
+
+  // Feedback Management Functions
+  async function loadCustomerFeedback(customerId) {
+    try {
+      const feedback = await customerService.getCustomerFeedback(customerId);
+      setCustomerFeedback(feedback);
+    } catch (error) {
+      toast.error('Failed to load customer feedback');
+      console.error('Error loading feedback:', error);
+    }
+  }
+
+  function showFeedbackView(customer) {
+    setSelectedCustomerFeedback(customer);
+    setFeedbackView(true);
+    loadCustomerFeedback(customer.Id);
+  }
+
+  async function handleAddFeedback() {
+    if (!selectedCustomerFeedback) return;
+    
+    try {
+      const feedbackData = {
+        ...newFeedback,
+        customerId: selectedCustomerFeedback.Id,
+        customerName: `${selectedCustomerFeedback.firstName} ${selectedCustomerFeedback.lastName}`,
+        date: new Date().toISOString(),
+        status: 'new'
+      };
+      
+      await customerService.addCustomerFeedback(selectedCustomerFeedback.Id, feedbackData);
+      await loadCustomerFeedback(selectedCustomerFeedback.Id);
+      setShowAddFeedbackForm(false);
+      setNewFeedback({
+        rating: 5,
+        subject: '',
+        message: '',
+        category: 'general',
+        priority: 'medium'
+      });
+      toast.success('Feedback added successfully');
+    } catch (error) {
+      toast.error('Failed to add feedback');
+      console.error('Error adding feedback:', error);
+    }
+  }
+
+  async function updateFeedbackStatus(feedbackId, status) {
+    try {
+      await customerService.updateFeedbackStatus(feedbackId, status);
+      await loadCustomerFeedback(selectedCustomerFeedback.Id);
+      toast.success('Feedback status updated');
+    } catch (error) {
+      toast.error('Failed to update feedback status');
+      console.error('Error updating feedback status:', error);
+    }
   }
 
   function getTierColor(tier) {
@@ -220,12 +290,36 @@ function showDeleteConfirmation(customer) {
     return colors[status] || 'bg-gray-100 text-gray-800';
   }
 
+  function getFeedbackStatusColor(status) {
+    const colors = {
+      new: 'bg-blue-100 text-blue-800',
+      in_progress: 'bg-yellow-100 text-yellow-800',
+      resolved: 'bg-green-100 text-green-800',
+      closed: 'bg-gray-100 text-gray-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+  }
+
+  function getPriorityColor(priority) {
+    const colors = {
+      low: 'bg-green-100 text-green-800',
+      medium: 'bg-yellow-100 text-yellow-800',
+      high: 'bg-red-100 text-red-800'
+    };
+    return colors[priority] || 'bg-gray-100 text-gray-800';
+  }
+
   function formatDate(dateString) {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
+  }
+
+  function getFilteredFeedback() {
+    if (feedbackFilter === 'all') return customerFeedback;
+    return customerFeedback.filter(feedback => feedback.status === feedbackFilter);
   }
 
   if (loading) return <Loading />;
@@ -368,10 +462,19 @@ function showDeleteConfirmation(customer) {
                     variant="outline"
                     size="sm"
                     onClick={() => setSelectedCustomerLoyalty(customer)}
-                    className="bg-accent/10 hover:bg-accent/20 text-accent"
+className="bg-accent/10 hover:bg-accent/20 text-accent"
                     tooltip="Manage loyalty points and rewards"
                   >
                     <ApperIcon name="Star" size={14} />
+                  </Button>
+                  <Button
+                    onClick={() => showFeedbackView(customer)}
+                    size="sm"
+                    variant="ghost"
+                    className="bg-info/10 hover:bg-info/20 text-info"
+                    tooltip="View customer feedback"
+                  >
+                    <ApperIcon name="MessageSquare" size={14} />
                   </Button>
 <Button
                     variant="outline"
@@ -745,12 +848,20 @@ variant="outline"
                     onClick={() => {
                       setSelectedCustomerLoyalty(selectedCustomer);
                       setSelectedCustomer(null);
-                    }}
+}}
                     className="bg-accent/10 hover:bg-accent/20 text-accent"
                     tooltip="Manage loyalty points and rewards"
                   >
                     <ApperIcon name="Star" size={16} />
                     Loyalty
+                  </Button>
+                  <Button
+                    onClick={() => showFeedbackView(selectedCustomer)}
+                    className="bg-info/10 hover:bg-info/20 text-info"
+                    tooltip="View customer feedback"
+                  >
+                    <ApperIcon name="MessageSquare" size={16} />
+                    Feedback
                   </Button>
 <Button
                     variant="outline"
@@ -958,7 +1069,276 @@ variant="outline"
             </div>
           </Card>
         </div>
+)}
+
+      {/* Customer Feedback Modal */}
+      {feedbackView && selectedCustomerFeedback && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={() => setFeedbackView(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            className="bg-surface rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-primary">
+                  Customer Feedback - {selectedCustomerFeedback.firstName} {selectedCustomerFeedback.lastName}
+                </h3>
+                <p className="text-sm text-gray-600">{selectedCustomerFeedback.email}</p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  onClick={() => setShowAddFeedbackForm(true)}
+                  size="sm"
+                  className="bg-accent hover:bg-accent/90 text-white"
+                >
+                  <ApperIcon name="Plus" size={16} />
+                  Add Feedback
+                </Button>
+                <Button
+                  onClick={() => setFeedbackView(false)}
+                  size="sm"
+                  variant="ghost"
+                  className="text-gray-600 hover:text-gray-800"
+                >
+                  <ApperIcon name="X" size={16} />
+                </Button>
+              </div>
+            </div>
+
+            <div className="p-6 max-h-[70vh] overflow-y-auto">
+              {/* Feedback Filters */}
+              <div className="mb-4 flex items-center space-x-2">
+                <span className="text-sm font-medium text-gray-700">Filter:</span>
+                {['all', 'new', 'in_progress', 'resolved', 'closed'].map((filter) => (
+                  <Button
+                    key={filter}
+                    onClick={() => setFeedbackFilter(filter)}
+                    size="sm"
+                    variant={feedbackFilter === filter ? 'default' : 'ghost'}
+                    className={`text-xs ${
+                      feedbackFilter === filter 
+                        ? 'bg-secondary text-white' 
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    {filter.replace('_', ' ').toUpperCase()}
+                  </Button>
+                ))}
+              </div>
+
+              {/* Feedback List */}
+              <div className="space-y-4">
+                {getFilteredFeedback().length === 0 ? (
+                  <div className="text-center py-12">
+                    <ApperIcon name="MessageSquare" size={48} className="mx-auto text-gray-400 mb-4" />
+                    <p className="text-gray-600">No feedback found</p>
+                  </div>
+                ) : (
+                  getFilteredFeedback().map((feedback) => (
+                    <Card key={feedback.Id} className="p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          <Badge className={getFeedbackStatusColor(feedback.status)}>
+                            {feedback.status.replace('_', ' ')}
+                          </Badge>
+                          <Badge className={getPriorityColor(feedback.priority)}>
+                            {feedback.priority}
+                          </Badge>
+                          <Badge className="bg-gray-100 text-gray-800">
+                            {feedback.category}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-1 text-yellow-500">
+                            {[...Array(5)].map((_, i) => (
+                              <ApperIcon
+                                key={i}
+                                name="Star"
+                                size={12}
+                                className={i < feedback.rating ? 'fill-current' : ''}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-xs text-gray-500">
+                            {formatDate(feedback.date)}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <h4 className="font-medium text-primary mb-2">{feedback.subject}</h4>
+                      <p className="text-gray-600 text-sm mb-3">{feedback.message}</p>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">
+                          Feedback ID: {feedback.Id}
+                        </span>
+                        <div className="flex items-center space-x-1">
+                          {feedback.status === 'new' && (
+                            <Button
+                              onClick={() => updateFeedbackStatus(feedback.Id, 'in_progress')}
+                              size="sm"
+                              variant="ghost"
+                              className="text-xs text-blue-600 hover:text-blue-800"
+                            >
+                              Start Progress
+                            </Button>
+                          )}
+                          {feedback.status === 'in_progress' && (
+                            <Button
+                              onClick={() => updateFeedbackStatus(feedback.Id, 'resolved')}
+                              size="sm"
+                              variant="ghost"
+                              className="text-xs text-green-600 hover:text-green-800"
+                            >
+                              Mark Resolved
+                            </Button>
+                          )}
+                          {feedback.status === 'resolved' && (
+                            <Button
+                              onClick={() => updateFeedbackStatus(feedback.Id, 'closed')}
+                              size="sm"
+                              variant="ghost"
+                              className="text-xs text-gray-600 hover:text-gray-800"
+                            >
+                              Close
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
       )}
+
+      {/* Add Feedback Form Modal */}
+      {showAddFeedbackForm && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowAddFeedbackForm(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            className="bg-surface rounded-lg shadow-xl max-w-lg w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-primary">Add Customer Feedback</h3>
+              <Button
+                onClick={() => setShowAddFeedbackForm(false)}
+                size="sm"
+                variant="ghost"
+                className="text-gray-600 hover:text-gray-800"
+              >
+                <ApperIcon name="X" size={16} />
+              </Button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-primary mb-2">Subject</label>
+                <Input
+                  value={newFeedback.subject}
+                  onChange={(e) => setNewFeedback(prev => ({ ...prev, subject: e.target.value }))}
+                  placeholder="Feedback subject"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-primary mb-2">Message</label>
+                <textarea
+                  value={newFeedback.message}
+                  onChange={(e) => setNewFeedback(prev => ({ ...prev, message: e.target.value }))}
+                  placeholder="Feedback message"
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-primary mb-2">Rating</label>
+                  <select
+                    value={newFeedback.rating}
+                    onChange={(e) => setNewFeedback(prev => ({ ...prev, rating: parseInt(e.target.value) }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+                  >
+                    <option value={5}>5 Stars</option>
+                    <option value={4}>4 Stars</option>
+                    <option value={3}>3 Stars</option>
+                    <option value={2}>2 Stars</option>
+                    <option value={1}>1 Star</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-primary mb-2">Category</label>
+                  <select
+                    value={newFeedback.category}
+                    onChange={(e) => setNewFeedback(prev => ({ ...prev, category: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+                  >
+                    <option value="general">General</option>
+                    <option value="product">Product</option>
+                    <option value="service">Service</option>
+                    <option value="delivery">Delivery</option>
+                    <option value="billing">Billing</option>
+                    <option value="support">Support</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-primary mb-2">Priority</label>
+                <select
+                  value={newFeedback.priority}
+                  onChange={(e) => setNewFeedback(prev => ({ ...prev, priority: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button
+                  onClick={() => setShowAddFeedbackForm(false)}
+                  variant="ghost"
+                  className="text-gray-600 hover:text-gray-800"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddFeedback}
+                  disabled={!newFeedback.subject || !newFeedback.message}
+                  className="bg-accent hover:bg-accent/90 text-white"
+                >
+                  Add Feedback
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
 {/* Delete Confirmation Modal */}
       {deleteConfirmation.show && deleteConfirmation.customer && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
