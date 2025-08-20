@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Chart from "react-apexcharts";
+import { toast } from "react-hot-toast";
 import ApperIcon from "@/components/ApperIcon";
 import Error from "@/components/ui/Error";
 import Loading from "@/components/ui/Loading";
@@ -11,7 +12,6 @@ import Card from "@/components/atoms/Card";
 import { InventoryService } from "@/services/api/inventoryService";
 import { TransactionService } from "@/services/api/transactionService";
 import { DashboardService } from "@/services/api/dashboardService";
-import { toast } from "react-hot-toast";
 
 const Reports = () => {
   const [salesData, setSalesData] = useState([]);
@@ -280,11 +280,10 @@ const loadReportsData = async () => {
               </tbody>
             </table>
           </div>
-        </Card>
+</Card>
       )}
-
       {/* Other Tab Placeholders */}
-{activeTab === "inventory" && (
+      {activeTab === "inventory" && (
         <InventoryAnalysisTab 
           slowMovingItems={slowMovingItems}
           loading={loading}
@@ -302,7 +301,7 @@ const loadReportsData = async () => {
           </p>
         </Card>
       )}
-    </div>
+    </motion.div>
   );
 }
 
