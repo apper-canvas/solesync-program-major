@@ -11,9 +11,10 @@ import Empty from "@/components/ui/Empty";
 import ApperIcon from "@/components/ApperIcon";
 import { InventoryService } from "@/services/api/inventoryService";
 import { TransactionService } from "@/services/api/transactionService";
+import { GiftCardService } from "@/services/api/giftCardService";
 
 const POSInterface = () => {
-  const [products, setProducts] = useState([]);
+const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -21,7 +22,13 @@ const POSInterface = () => {
   const [discount, setDiscount] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [customerPaid, setCustomerPaid] = useState("");
-
+  const [giftCardCode, setGiftCardCode] = useState("");
+  const [giftCardAmount, setGiftCardAmount] = useState("");
+  const [giftCardBalance, setGiftCardBalance] = useState(null);
+  const [recipientName, setRecipientName] = useState("");
+  const [recipientEmail, setRecipientEmail] = useState("");
+  const [showGiftCardPurchase, setShowGiftCardPurchase] = useState(false);
+  const [showGiftCardRedeem, setShowGiftCardRedeem] = useState(false);
   useEffect(() => {
     loadProducts();
   }, []);
@@ -103,32 +110,133 @@ const POSInterface = () => {
     return paid - calculateTotal();
   };
 
+const checkGiftCardBalance = async () => {
+    if (!giftCardCode.trim()) {
+      toast.error("Please enter gift card code");
+      return;
+    }
+
+    try {
+      const giftCard = await GiftCardService.getByCode(giftCardCode);
+      setGiftCardBalance(giftCard.balance);
+      toast.success(`Gift card balance: $${giftCard.balance.toFixed(2)}`);
+    } catch (err) {
+      toast.error("Invalid gift card code");
+      setGiftCardBalance(null);
+    }
+  };
+
+  const processGiftCardPurchase = async () => {
+    const amount = parseFloat(giftCardAmount);
+    if (!amount || amount < 5 || amount > 500) {
+      toast.error("Gift card amount must be between $5 and $500");
+      return;
+    }
+
+    if (!recipientName.trim()) {
+      toast.error("Please enter recipient name");
+      return;
+    }
+
+    if (paymentMethod === "cash" && parseFloat(customerPaid) < amount) {
+      toast.error("Insufficient payment");
+      return;
+    }
+
+    try {
+      // Create gift card
+      const giftCard = await GiftCardService.create({
+        amount: amount,
+        recipientName: recipientName.trim(),
+        recipientEmail: recipientEmail.trim() || null,
+        purchasedBy: "POS User"
+      });
+
+      // Create transaction record
+      const transaction = {
+        type: "gift_card",
+        giftCardCode: giftCard.code,
+        giftCardAmount: amount,
+        recipientName: recipientName.trim(),
+        recipientEmail: recipientEmail.trim() || null,
+        total: amount,
+        payment: {
+          method: paymentMethod,
+          amount: paymentMethod === "cash" ? parseFloat(customerPaid) : amount,
+          change: paymentMethod === "cash" ? parseFloat(customerPaid) - amount : 0
+        },
+        timestamp: new Date().toISOString()
+      };
+
+      await TransactionService.create(transaction);
+      
+      toast.success(`Gift card created! Code: ${giftCard.code}`);
+      setShowGiftCardPurchase(false);
+      setGiftCardAmount("");
+      setRecipientName("");
+      setRecipientEmail("");
+      setCustomerPaid("");
+    } catch (err) {
+      toast.error("Failed to create gift card");
+      console.error("Gift card creation error:", err);
+    }
+  };
+
   const processPayment = async () => {
     if (cart.length === 0) {
       toast.error("Cart is empty");
       return;
     }
 
-    if (paymentMethod === "cash" && parseFloat(customerPaid) < calculateTotal()) {
+    const total = calculateTotal();
+
+    if (paymentMethod === "cash" && parseFloat(customerPaid) < total) {
       toast.error("Insufficient payment");
       return;
     }
 
+    if (paymentMethod === "gift_card") {
+      if (!giftCardCode.trim()) {
+        toast.error("Please enter gift card code");
+        return;
+      }
+      
+      try {
+        const giftCard = await GiftCardService.getByCode(giftCardCode);
+        if (giftCard.balance < total) {
+          toast.error(`Insufficient gift card balance. Available: $${giftCard.balance.toFixed(2)}`);
+          return;
+        }
+      } catch (err) {
+        toast.error("Invalid gift card code");
+        return;
+      }
+    }
+
     try {
-      const transaction = {
+      let transaction = {
         type: "sale",
         items: cart,
         subtotal: calculateSubtotal(),
         discount: calculateDiscount(),
         tax: calculateTax(),
-        total: calculateTotal(),
+        total: total,
         payment: {
           method: paymentMethod,
-          amount: paymentMethod === "cash" ? parseFloat(customerPaid) : calculateTotal(),
-          change: paymentMethod === "cash" ? calculateChange() : 0
+          amount: total,
+          change: 0
         },
         timestamp: new Date().toISOString()
       };
+
+      if (paymentMethod === "cash") {
+        transaction.payment.amount = parseFloat(customerPaid);
+        transaction.payment.change = calculateChange();
+      } else if (paymentMethod === "gift_card") {
+        transaction.giftCardCode = giftCardCode;
+        // Update gift card balance
+        await GiftCardService.redeem(giftCardCode, total);
+      }
 
       await TransactionService.create(transaction);
       
@@ -146,6 +254,8 @@ const POSInterface = () => {
       toast.success("Payment processed successfully!");
       clearCart();
       setCustomerPaid("");
+      setGiftCardCode("");
+      setGiftCardBalance(null);
       setDiscount(0);
       loadProducts(); // Refresh stock levels
     } catch (err) {
@@ -321,10 +431,131 @@ const POSInterface = () => {
                 </div>
               </div>
 
+{/* Gift Card Actions */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h3 className="text-sm font-medium text-gray-700 mb-3">Gift Card Services</h3>
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setShowGiftCardPurchase(!showGiftCardPurchase)}
+                    className="justify-center"
+                  >
+                    <ApperIcon name="Gift" className="h-4 w-4 mr-1" />
+                    Sell Gift Card
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setShowGiftCardRedeem(!showGiftCardRedeem)}
+                    className="justify-center"
+                  >
+                    <ApperIcon name="CreditCard" className="h-4 w-4 mr-1" />
+                    Check Balance
+                  </Button>
+                </div>
+
+                {/* Gift Card Purchase */}
+                {showGiftCardPurchase && (
+                  <div className="space-y-3 p-3 bg-white rounded border">
+                    <h4 className="font-medium text-gray-900">Create Gift Card</h4>
+                    <Input
+                      label="Amount ($5 - $500)"
+                      type="number"
+                      value={giftCardAmount}
+                      onChange={(e) => setGiftCardAmount(e.target.value)}
+                      placeholder="50.00"
+                      min="5"
+                      max="500"
+                      step="0.01"
+                      className="text-sm"
+                    />
+                    <Input
+                      label="Recipient Name *"
+                      value={recipientName}
+                      onChange={(e) => setRecipientName(e.target.value)}
+                      placeholder="Enter recipient name"
+                      className="text-sm"
+                    />
+                    <Input
+                      label="Recipient Email (optional)"
+                      type="email"
+                      value={recipientEmail}
+                      onChange={(e) => setRecipientEmail(e.target.value)}
+                      placeholder="recipient@example.com"
+                      className="text-sm"
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant={paymentMethod === "cash" ? "primary" : "secondary"}
+                        size="sm"
+                        onClick={() => setPaymentMethod("cash")}
+                      >
+                        Cash
+                      </Button>
+                      <Button
+                        variant={paymentMethod === "card" ? "primary" : "secondary"}
+                        size="sm"
+                        onClick={() => setPaymentMethod("card")}
+                      >
+                        Card
+                      </Button>
+                    </div>
+                    {paymentMethod === "cash" && (
+                      <Input
+                        label="Amount Received"
+                        type="number"
+                        value={customerPaid}
+                        onChange={(e) => setCustomerPaid(e.target.value)}
+                        placeholder="0.00"
+                        step="0.01"
+                        className="text-sm"
+                      />
+                    )}
+                    <Button
+                      onClick={processGiftCardPurchase}
+                      size="sm"
+                      className="w-full"
+                      disabled={!giftCardAmount || !recipientName || (paymentMethod === "cash" && parseFloat(customerPaid) < parseFloat(giftCardAmount))}
+                    >
+                      Create Gift Card
+                    </Button>
+                  </div>
+                )}
+
+                {/* Gift Card Balance Check */}
+                {showGiftCardRedeem && (
+                  <div className="space-y-3 p-3 bg-white rounded border">
+                    <h4 className="font-medium text-gray-900">Gift Card Balance</h4>
+                    <div className="flex space-x-2">
+                      <Input
+                        placeholder="Enter gift card code"
+                        value={giftCardCode}
+                        onChange={(e) => setGiftCardCode(e.target.value.toUpperCase())}
+                        className="text-sm flex-1"
+                      />
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={checkGiftCardBalance}
+                        disabled={!giftCardCode.trim()}
+                      >
+                        Check
+                      </Button>
+                    </div>
+                    {giftCardBalance !== null && (
+                      <div className="p-2 bg-success/10 rounded text-sm text-success">
+                        Available Balance: ${giftCardBalance.toFixed(2)}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* Payment Method */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <Button
                     variant={paymentMethod === "cash" ? "primary" : "secondary"}
                     size="sm"
@@ -340,6 +571,14 @@ const POSInterface = () => {
                     className="justify-center"
                   >
                     Card
+                  </Button>
+                  <Button
+                    variant={paymentMethod === "gift_card" ? "primary" : "secondary"}
+                    size="sm"
+                    onClick={() => setPaymentMethod("gift_card")}
+                    className="justify-center"
+                  >
+                    Gift Card
                   </Button>
                 </div>
               </div>
@@ -365,13 +604,48 @@ const POSInterface = () => {
                 </div>
               )}
 
+              {/* Gift Card Payment */}
+              {paymentMethod === "gift_card" && (
+                <div className="mb-4">
+                  <div className="flex space-x-2 mb-2">
+                    <Input
+                      label="Gift Card Code"
+                      value={giftCardCode}
+                      onChange={(e) => setGiftCardCode(e.target.value.toUpperCase())}
+                      placeholder="Enter gift card code"
+                      className="text-sm flex-1"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={checkGiftCardBalance}
+                      disabled={!giftCardCode.trim()}
+                      className="mt-6"
+                    >
+                      <ApperIcon name="Search" className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  {giftCardBalance !== null && (
+                    <div className={`mt-2 p-2 rounded text-sm ${
+                      giftCardBalance >= calculateTotal() 
+                        ? 'bg-success/10 text-success' 
+                        : 'bg-warning/10 text-warning'
+                    }`}>
+                      Available: ${giftCardBalance.toFixed(2)} | 
+                      Required: ${calculateTotal().toFixed(2)}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Process Payment */}
-              <Button
+<Button
                 onClick={processPayment}
                 className="w-full"
                 disabled={
                   cart.length === 0 || 
-                  (paymentMethod === "cash" && parseFloat(customerPaid) < calculateTotal())
+                  (paymentMethod === "cash" && parseFloat(customerPaid) < calculateTotal()) ||
+                  (paymentMethod === "gift_card" && (!giftCardCode.trim() || (giftCardBalance !== null && giftCardBalance < calculateTotal())))
                 }
               >
                 Process Payment

@@ -15,13 +15,13 @@ export class TransactionService {
     return { ...transaction };
   }
 
-  static async create(transaction) {
+static async create(transaction) {
     await new Promise(resolve => setTimeout(resolve, 400));
-    const newId = Math.max(...transactionData.map(t => t.Id)) + 1;
+    const newId = Math.max(...transactionData.map(t => t.Id), 0) + 1;
     const newTransaction = { 
       ...transaction, 
       Id: newId,
-      timestamp: new Date().toISOString()
+      timestamp: transaction.timestamp || new Date().toISOString()
     };
     transactionData.push(newTransaction);
     return { ...newTransaction };
