@@ -1,16 +1,18 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { toast } from 'react-toastify';
-import Card from '@/components/atoms/Card';
-import Button from '@/components/atoms/Button';
-import Input from '@/components/atoms/Input';
-import Badge from '@/components/atoms/Badge';
-import ApperIcon from '@/components/ApperIcon';
-import Loading from '@/components/ui/Loading';
-import Error from '@/components/ui/Error';
-import Empty from '@/components/ui/Empty';
-import { DocumentService } from '@/services/api/documentService';
-
+import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { toast } from "react-toastify";
+import documentService from "@/services/api/documentService";
+import * as purchaseOrderService from "@/services/api/purchaseOrderService";
+import * as transactionService from "@/services/api/transactionService";
+import * as inventoryService from "@/services/api/inventoryService";
+import ApperIcon from "@/components/ApperIcon";
+import Error from "@/components/ui/Error";
+import Empty from "@/components/ui/Empty";
+import Loading from "@/components/ui/Loading";
+import Button from "@/components/atoms/Button";
+import Card from "@/components/atoms/Card";
+import Badge from "@/components/atoms/Badge";
+import Input from "@/components/atoms/Input";
 export default function SupplierPortal() {
 const [documents, setDocuments] = useState([]);
   const [filteredDocuments, setFilteredDocuments] = useState([]);
@@ -77,7 +79,7 @@ useEffect(() => {
   async function loadCommunications() {
     try {
       setLoading(true);
-      const data = await DocumentService.getCommunications();
+const data = await documentService.getCommunications();
       setCommunications(data);
     } catch (err) {
       setError('Failed to load communications');
@@ -127,7 +129,7 @@ useEffect(() => {
         createdBy: 'Current User'
       };
 
-      await DocumentService.createCommunication(communicationData);
+await documentService.createCommunication(communicationData);
       await loadCommunications();
       setShowAddCommModal(false);
       setNewComm({
@@ -151,7 +153,7 @@ useEffect(() => {
 
   async function handleUpdateCommunication(id, updateData) {
     try {
-      await DocumentService.updateCommunication(id, updateData);
+await documentService.updateCommunication(id, updateData);
       await loadCommunications();
       toast.success('Communication updated successfully');
     } catch (err) {
@@ -165,7 +167,7 @@ useEffect(() => {
     }
 
     try {
-      await DocumentService.deleteCommunication(id);
+await documentService.deleteCommunication(id);
       await loadCommunications();
       toast.success('Communication deleted successfully');
     } catch (err) {
@@ -215,7 +217,7 @@ useEffect(() => {
     try {
       setLoading(true);
       setError(null);
-      const data = await DocumentService.getAll();
+const data = await documentService.getAll();
       setDocuments(data);
     } catch (err) {
       setError('Failed to load documents');
@@ -261,7 +263,7 @@ useEffect(() => {
           uploadedAt: new Date().toISOString()
         };
 
-        const created = await DocumentService.create(newDocument);
+const created = await documentService.create(newDocument);
         setDocuments(prev => [created, ...prev]);
         toast.success(`Document "${file.name}" uploaded successfully`);
       }
@@ -296,7 +298,7 @@ useEffect(() => {
     if (!window.confirm('Are you sure you want to delete this document?')) return;
 
     try {
-      await DocumentService.delete(documentId);
+await documentService.delete(documentId);
       setDocuments(prev => prev.filter(doc => doc.Id !== documentId));
       setSelectedDocument(null);
       toast.success('Document deleted successfully');
@@ -307,7 +309,7 @@ useEffect(() => {
 
   const handleUpdateCategory = async (documentId, newCategory) => {
     try {
-      const updatedDoc = await DocumentService.update(documentId, { category: newCategory });
+const updatedDoc = await documentService.update(documentId, { category: newCategory });
       setDocuments(prev => prev.map(doc => doc.Id === documentId ? updatedDoc : doc));
       toast.success('Document category updated');
     } catch (error) {
