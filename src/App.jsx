@@ -14,6 +14,8 @@ import Reports from "@/components/pages/Reports";
 import Sync from "@/components/pages/Sync";
 import Settings from "@/components/pages/Settings";
 import SupplierPortal from "@/components/pages/SupplierPortal";
+import CustomerPortal from "@/components/pages/CustomerPortal";
+
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -28,6 +30,7 @@ const getPageTitle = (pathname) => {
       case "/sync": return "Sync Management";
       case "/settings": return "Settings";
       case "/suppliers": return "Supplier Portal";
+      case "/customers": return "Customer Portal";
       default: return "SoleSync Pro";
     }
   };
@@ -59,6 +62,7 @@ const getPageTitle = (pathname) => {
                     <Route path="/sync" element={<Sync />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/suppliers" element={<SupplierPortal />} />
+                    <Route path="/customers" element={<CustomerPortal />} />
                   </Routes>
                 </main>
               </>
