@@ -20,6 +20,7 @@ function CustomerPortal() {
   const [statusFilter, setStatusFilter] = useState('all');
 const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState({ show: false, customer: null });
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [editFormData, setEditFormData] = useState({
     firstName: '',
@@ -180,15 +181,19 @@ function handleEditCustomer(customer) {
     }
   }
 
-  async function handleDeleteCustomer(id) {
-    if (!window.confirm('Are you sure you want to delete this customer?')) {
-      return;
-    }
+function showDeleteConfirmation(customer) {
+    setDeleteConfirmation({ show: true, customer });
+  }
+
+  async function handleDeleteCustomer() {
+    const { customer } = deleteConfirmation;
+    if (!customer) return;
 
     try {
-      await customerService.delete(id);
+      await customerService.delete(customer.Id);
       toast.success('Customer deleted successfully');
       setSelectedCustomer(null);
+      setDeleteConfirmation({ show: false, customer: null });
       await loadCustomers();
     } catch (err) {
       console.error('Error deleting customer:', err);
@@ -369,10 +374,10 @@ function handleEditCustomer(customer) {
                   >
                     <ApperIcon name="Edit" size={14} />
                   </Button>
-                  <Button
+<Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleDeleteCustomer(customer.Id)}
+                    onClick={() => showDeleteConfirmation(customer)}
                     className="text-red-600 hover:text-red-700"
                   >
                     <ApperIcon name="Trash2" size={14} />
@@ -725,8 +730,8 @@ function handleEditCustomer(customer) {
                     Loyalty
                   </Button>
                   <Button
-                    variant="outline"
-                    onClick={() => handleDeleteCustomer(selectedCustomer.Id)}
+variant="outline"
+                    onClick={() => showDeleteConfirmation(selectedCustomer)}
                     className="text-red-600 hover:text-red-700"
                   >
                     <ApperIcon name="Trash2" size={16} />
@@ -922,6 +927,49 @@ function handleEditCustomer(customer) {
                     <p className="text-gray-500 text-center py-4">No redemption history</p>
                   )}
                 </Card>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+{/* Delete Confirmation Modal */}
+      {deleteConfirmation.show && deleteConfirmation.customer && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-md">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <ApperIcon name="AlertTriangle" size={24} className="text-red-600" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Delete Customer</h2>
+                  <p className="text-sm text-gray-600">This action cannot be undone</p>
+                </div>
+              </div>
+              
+              <p className="text-gray-700 mb-6">
+                Are you sure you want to delete{' '}
+                <span className="font-semibold">
+                  {deleteConfirmation.customer.firstName} {deleteConfirmation.customer.lastName}
+                </span>
+                ? This will permanently remove their profile and all associated data.
+              </p>
+              
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteConfirmation({ show: false, customer: null })}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleDeleteCustomer}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <ApperIcon name="Trash2" size={16} />
+                  Delete Customer
+                </Button>
               </div>
             </div>
           </Card>
