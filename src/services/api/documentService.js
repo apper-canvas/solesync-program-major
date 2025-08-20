@@ -1,9 +1,12 @@
-import mockDocuments from '@/services/mockData/documents.json';
+import mockCommunications from "@/services/mockData/communications.json";
+import mockDocuments from "@/services/mockData/documents.json";
 
 class DocumentServiceClass {
   constructor() {
     this.documents = [...mockDocuments];
+    this.communications = [...mockCommunications];
     this.nextId = Math.max(...this.documents.map(doc => doc.Id), 0) + 1;
+    this.nextCommId = Math.max(...this.communications.map(comm => comm.Id), 0) + 1;
   }
 
   async getAll() {
@@ -129,7 +132,7 @@ class DocumentServiceClass {
       return uploadDate > weekAgo;
     }).length;
     
-    return {
+return {
       totalDocuments,
       categories,
       suppliers,
@@ -137,6 +140,133 @@ class DocumentServiceClass {
       recentUploads
     };
   }
+
+  // Communication Log Methods
+  async getCommunications() {
+    await new Promise(resolve => setTimeout(resolve, 600));
+    return [...this.communications];
+  }
+
+  async getCommunicationById(id) {
+    if (!Number.isInteger(id) || id <= 0) {
+      throw new Error('Invalid communication ID');
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const communication = this.communications.find(comm => comm.Id === id);
+    
+    if (!communication) {
+      throw new Error('Communication not found');
+    }
+    
+    return { ...communication };
+  }
+
+  async getCommunicationsBySupplier(supplierId) {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return this.communications
+      .filter(comm => comm.supplierId === supplierId)
+      .map(comm => ({ ...comm }));
+  }
+
+  async createCommunication(communicationData) {
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    const newCommunication = {
+      ...communicationData,
+      Id: this.nextCommId++,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    this.communications.unshift(newCommunication);
+    return { ...newCommunication };
+  }
+
+  async updateCommunication(id, updateData) {
+    if (!Number.isInteger(id) || id <= 0) {
+      throw new Error('Invalid communication ID');
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 600));
+    
+    const index = this.communications.findIndex(comm => comm.Id === id);
+    if (index === -1) {
+      throw new Error('Communication not found');
+    }
+    
+    const updatedCommunication = {
+      ...this.communications[index],
+      ...updateData,
+      Id: id, // Ensure ID doesn't change
+      updatedAt: new Date().toISOString()
+    };
+    
+    this.communications[index] = updatedCommunication;
+    return { ...updatedCommunication };
+  }
+
+  async deleteCommunication(id) {
+    if (!Number.isInteger(id) || id <= 0) {
+      throw new Error('Invalid communication ID');
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 400));
+    
+    const index = this.communications.findIndex(comm => comm.Id === id);
+    if (index === -1) {
+      throw new Error('Communication not found');
+    }
+    
+    const deletedCommunication = this.communications.splice(index, 1)[0];
+    return { ...deletedCommunication };
+  }
+
+  async searchCommunications(query) {
+    await new Promise(resolve => setTimeout(resolve, 400));
+    
+    const searchTerm = query.toLowerCase();
+    return this.communications
+      .filter(comm => 
+        comm.subject.toLowerCase().includes(searchTerm) ||
+        comm.content.toLowerCase().includes(searchTerm) ||
+        comm.supplierName.toLowerCase().includes(searchTerm) ||
+        comm.contactPerson.toLowerCase().includes(searchTerm) ||
+        comm.type.toLowerCase().includes(searchTerm)
+      )
+      .map(comm => ({ ...comm }));
+  }
+
+  async getCommunicationStats() {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const totalCommunications = this.communications.length;
+    const types = {};
+    const suppliers = {};
+    const statuses = {};
+    
+    this.communications.forEach(comm => {
+      types[comm.type] = (types[comm.type] || 0) + 1;
+      suppliers[comm.supplierName] = (suppliers[comm.supplierName] || 0) + 1;
+      statuses[comm.status] = (statuses[comm.status] || 0) + 1;
+    });
+    
+    const recentCommunications = this.communications.filter(comm => {
+      const commDate = new Date(comm.createdAt);
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return commDate > weekAgo;
+    }).length;
+    
+return {
+      totalCommunications,
+      types,
+      suppliers,
+      statuses,
+      recentCommunications
+    };
+  }
 }
 
-export const DocumentService = new DocumentServiceClass();
+const documentService = new DocumentServiceClass();
+export default documentService;
