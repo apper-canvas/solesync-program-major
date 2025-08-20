@@ -22,7 +22,7 @@ function CustomerPortal() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
 
-  const [newCustomer, setNewCustomer] = useState({
+const [newCustomer, setNewCustomer] = useState({
     firstName: '',
     lastName: '',
     email: '',
@@ -34,6 +34,28 @@ function CustomerPortal() {
     membershipTier: 'bronze',
     status: 'active'
   });
+
+  const [loyaltyView, setLoyaltyView] = useState(false);
+  const [loyaltyStats, setLoyaltyStats] = useState(null);
+  const [selectedCustomerLoyalty, setSelectedCustomerLoyalty] = useState(null);
+  const [pointsToAward, setPointsToAward] = useState('');
+  const [rewardToRedeem, setRewardToRedeem] = useState('');
+
+  const rewardOptions = [
+    { value: 10, label: '$1 Store Credit', cost: 10 },
+    { value: 50, label: '$5 Store Credit', cost: 50 },
+    { value: 100, label: '$10 Store Credit', cost: 100 },
+    { value: 200, label: '$20 Store Credit', cost: 200 },
+    { value: 250, label: 'Free Shipping Voucher', cost: 25 },
+    { value: 500, label: '$50 Store Credit', cost: 500 }
+  ];
+
+  const tierThresholds = {
+    bronze: { min: 0, max: 999, color: 'bg-amber-100 text-amber-800' },
+    silver: { min: 1000, max: 2499, color: 'bg-gray-100 text-gray-800' },
+    gold: { min: 2500, max: 4999, color: 'bg-yellow-100 text-yellow-800' },
+    platinum: { min: 5000, max: Infinity, color: 'bg-purple-100 text-purple-800' }
+  };
 
   useEffect(() => {
     loadCustomers();
@@ -209,7 +231,7 @@ function CustomerPortal() {
           description="Try adjusting your search filters or add a new customer."
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCustomers.map((customer, index) => (
             <motion.div
               key={customer.Id}
@@ -252,6 +274,34 @@ function CustomerPortal() {
                     <ApperIcon name="Calendar" size={14} />
                     Joined {formatDate(customer.dateJoined)}
                   </div>
+                  
+                  {/* Loyalty Information */}
+                  <div className="pt-2 border-t">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <ApperIcon name="Star" size={14} />
+                      {customer.loyaltyPoints || 0} points
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <ApperIcon name="Gift" size={14} />
+                      ${customer.rewardsBalance || 0} rewards
+                    </div>
+                    {customer.tierProgress && (
+                      <div className="mt-2">
+                        <div className="flex justify-between text-xs text-gray-500 mb-1">
+                          <span>Tier Progress</span>
+                          <span>{customer.tierProgress}/{tierThresholds[customer.membershipTier]?.max === Infinity ? '∞' : tierThresholds[customer.membershipTier]?.max}</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                          <div 
+                            className="bg-accent h-1.5 rounded-full" 
+                            style={{ 
+                              width: `${tierThresholds[customer.membershipTier]?.max === Infinity ? 100 : Math.min(100, (customer.tierProgress / tierThresholds[customer.membershipTier]?.max) * 100)}%` 
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex gap-2">
@@ -263,6 +313,14 @@ function CustomerPortal() {
                   >
                     <ApperIcon name="Eye" size={14} />
                     View
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedCustomerLoyalty(customer)}
+                    className="bg-accent/10 hover:bg-accent/20 text-accent"
+                  >
+                    <ApperIcon name="Star" size={14} />
                   </Button>
                   <Button
                     variant="outline"
@@ -403,7 +461,7 @@ function CustomerPortal() {
         </div>
       )}
 
-      {/* Customer Detail Modal */}
+{/* Customer Detail Modal */}
       {selectedCustomer && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -469,6 +527,14 @@ function CustomerPortal() {
                     <label className="block text-sm font-medium text-gray-500 mb-1">Total Orders</label>
                     <p className="text-gray-900">{selectedCustomer.totalOrders}</p>
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">Loyalty Points</label>
+                    <p className="text-gray-900">{selectedCustomer.loyaltyPoints || 0}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">Rewards Balance</label>
+                    <p className="text-gray-900">${selectedCustomer.rewardsBalance || 0}</p>
+                  </div>
                 </div>
 
                 <div className="flex gap-3 pt-4 border-t">
@@ -484,6 +550,17 @@ function CustomerPortal() {
                   </Button>
                   <Button
                     variant="outline"
+                    onClick={() => {
+                      setSelectedCustomerLoyalty(selectedCustomer);
+                      setSelectedCustomer(null);
+                    }}
+                    className="bg-accent/10 hover:bg-accent/20 text-accent"
+                  >
+                    <ApperIcon name="Star" size={16} />
+                    Loyalty
+                  </Button>
+                  <Button
+                    variant="outline"
                     onClick={() => handleDeleteCustomer(selectedCustomer.Id)}
                     className="text-red-600 hover:text-red-700"
                   >
@@ -491,6 +568,195 @@ function CustomerPortal() {
                     Delete
                   </Button>
                 </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Loyalty Management Modal */}
+      {selectedCustomerLoyalty && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold">Loyalty Program</h2>
+                  <p className="text-gray-600">
+                    {selectedCustomerLoyalty.firstName} {selectedCustomerLoyalty.lastName}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedCustomerLoyalty(null)}
+                >
+                  <ApperIcon name="X" size={16} />
+                </Button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Loyalty Overview */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card className="p-4 bg-accent/5 border-accent/20">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-accent/20 rounded-full flex items-center justify-center">
+                        <ApperIcon name="Star" size={20} className="text-accent" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Loyalty Points</p>
+                        <p className="text-xl font-semibold text-accent">{selectedCustomerLoyalty.loyaltyPoints || 0}</p>
+                      </div>
+                    </div>
+                  </Card>
+                  
+                  <Card className="p-4 bg-yellow-50 border-yellow-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-yellow-200 rounded-full flex items-center justify-center">
+                        <ApperIcon name="Gift" size={20} className="text-yellow-700" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Rewards Balance</p>
+                        <p className="text-xl font-semibold text-yellow-700">${selectedCustomerLoyalty.rewardsBalance || 0}</p>
+                      </div>
+                    </div>
+                  </Card>
+                  
+                  <Card className="p-4 bg-purple-50 border-purple-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-purple-200 rounded-full flex items-center justify-center">
+                        <ApperIcon name="Award" size={20} className="text-purple-700" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Tier</p>
+                        <p className="text-xl font-semibold text-purple-700 capitalize">{selectedCustomerLoyalty.membershipTier}</p>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+
+                {/* Tier Progress */}
+                <Card className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Tier Progress</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span>Current: {selectedCustomerLoyalty.tierProgress || 0} points</span>
+                      <span>
+                        Next Tier: {
+                          selectedCustomerLoyalty.membershipTier === 'bronze' ? 'Silver (1000 pts)' :
+                          selectedCustomerLoyalty.membershipTier === 'silver' ? 'Gold (2500 pts)' :
+                          selectedCustomerLoyalty.membershipTier === 'gold' ? 'Platinum (5000 pts)' :
+                          'Max Tier Reached'
+                        }
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-accent h-2 rounded-full transition-all" 
+                        style={{ 
+                          width: `${
+                            selectedCustomerLoyalty.membershipTier === 'platinum' ? 100 :
+                            selectedCustomerLoyalty.membershipTier === 'gold' ? Math.min(100, ((selectedCustomerLoyalty.tierProgress || 0) / 5000) * 100) :
+                            selectedCustomerLoyalty.membershipTier === 'silver' ? Math.min(100, ((selectedCustomerLoyalty.tierProgress || 0) / 2500) * 100) :
+                            Math.min(100, ((selectedCustomerLoyalty.tierProgress || 0) / 1000) * 100)
+                          }%` 
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Award Points Section */}
+                <Card className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Award Points</h3>
+                  <div className="flex gap-3">
+                    <Input
+                      type="number"
+                      placeholder="Points to award"
+                      value={pointsToAward}
+                      onChange={(e) => setPointsToAward(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={async () => {
+                        if (!pointsToAward || pointsToAward <= 0) {
+                          toast.error('Please enter valid points amount');
+                          return;
+                        }
+                        try {
+                          await customerService.awardPoints(selectedCustomerLoyalty.Id, parseInt(pointsToAward), 'Manual Award');
+                          toast.success(`Awarded ${pointsToAward} points successfully`);
+                          setPointsToAward('');
+                          loadCustomers();
+                          // Update the selected customer data
+                          const updatedCustomer = await customerService.getById(selectedCustomerLoyalty.Id);
+                          setSelectedCustomerLoyalty(updatedCustomer);
+                        } catch (error) {
+                          toast.error('Failed to award points');
+                        }
+                      }}
+                      disabled={!pointsToAward || pointsToAward <= 0}
+                    >
+                      <ApperIcon name="Plus" size={16} />
+                      Award Points
+                    </Button>
+                  </div>
+                </Card>
+
+                {/* Redeem Rewards Section */}
+                <Card className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Redeem Rewards</h3>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {rewardOptions.map((reward) => (
+                        <Button
+                          key={reward.value}
+                          variant="outline"
+                          onClick={async () => {
+                            if ((selectedCustomerLoyalty.rewardsBalance || 0) < reward.cost) {
+                              toast.error('Insufficient rewards balance');
+                              return;
+                            }
+                            try {
+                              await customerService.redeemRewards(selectedCustomerLoyalty.Id, reward.cost, reward.label);
+                              toast.success(`Redeemed ${reward.label} successfully`);
+                              loadCustomers();
+                              const updatedCustomer = await customerService.getById(selectedCustomerLoyalty.Id);
+                              setSelectedCustomerLoyalty(updatedCustomer);
+                            } catch (error) {
+                              toast.error('Failed to redeem reward');
+                            }
+                          }}
+                          disabled={(selectedCustomerLoyalty.rewardsBalance || 0) < reward.cost}
+                          className="justify-between"
+                        >
+                          <span>{reward.label}</span>
+                          <span className="text-sm text-gray-500">{reward.cost} pts</span>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Redemption History */}
+                <Card className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Redemption History</h3>
+                  {selectedCustomerLoyalty.redemptionHistory?.length > 0 ? (
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {selectedCustomerLoyalty.redemptionHistory.map((redemption) => (
+                        <div key={redemption.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                          <div>
+                            <p className="font-medium">{redemption.item}</p>
+                            <p className="text-sm text-gray-600">{formatDate(redemption.date)}</p>
+                          </div>
+                          <span className="text-sm font-medium text-gray-700">{redemption.amount} pts</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">No redemption history</p>
+                  )}
+                </Card>
               </div>
             </div>
           </Card>

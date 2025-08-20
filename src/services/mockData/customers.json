@@ -1,5 +1,5 @@
 [
-  {
+{
     "Id": 1,
     "firstName": "Sarah",
     "lastName": "Johnson",
@@ -13,7 +13,18 @@
     "status": "active",
     "dateJoined": "2023-01-15T00:00:00Z",
     "totalOrders": 24,
-    "totalSpent": 2850.75
+    "totalSpent": 2850.75,
+    "loyaltyPoints": 2850,
+    "rewardsBalance": 285,
+    "tierProgress": 2850,
+    "redemptionHistory": [
+      {
+        "id": 1,
+        "date": "2023-11-15T00:00:00Z",
+        "amount": 50,
+        "item": "$5 Store Credit"
+      }
+    ]
   },
   {
     "Id": 2,
