@@ -5,7 +5,7 @@ import * as PurchaseOrderService from "@/services/api/purchaseOrderService";
 import * as TransactionService from "@/services/api/transactionService";
 import * as GiftCardService from "@/services/api/giftCardService";
 import * as FulfillmentService from "@/services/api/fulfillmentService";
-import InventoryService from "@/services/api/inventoryService";
+import * as InventoryService from "@/services/api/inventoryService";
 import ApperIcon from "@/components/ApperIcon";
 import Error from "@/components/ui/Error";
 import Empty from "@/components/ui/Empty";
