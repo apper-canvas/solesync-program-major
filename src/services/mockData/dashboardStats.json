@@ -1,0 +1,61 @@
+{
+  "todaySales": 1247.85,
+  "salesGrowth": 12.5,
+  "totalInventory": 356,
+  "inventoryChange": -8,
+  "lowStockItems": 3,
+  "lowStockChange": -1,
+  "monthlyRevenue": 24580.90,
+  "monthlyGrowth": 18.2,
+  "topSellingProducts": [
+    {
+      "Id": 6,
+      "name": "Old Skool Black/White",
+      "brand": "Vans",
+      "unitsSold": 24,
+      "revenue": 1559.76
+    },
+    {
+      "Id": 1,
+      "name": "Air Force 1 Low White",
+      "brand": "Nike",
+      "unitsSold": 18,
+      "revenue": 1619.82
+    },
+    {
+      "Id": 5,
+      "name": "Chuck 70 High Top",
+      "brand": "Converse",
+      "unitsSold": 15,
+      "revenue": 1274.85
+    }
+  ],
+  "salesByCategory": [
+    { "category": "Sneakers", "revenue": 8420.50, "percentage": 34.2 },
+    { "category": "Running", "revenue": 6180.25, "percentage": 25.1 },
+    { "category": "Lifestyle", "revenue": 4950.80, "percentage": 20.1 },
+    { "category": "Casual", "revenue": 3280.15, "percentage": 13.3 },
+    { "category": "Basketball", "revenue": 1749.20, "percentage": 7.1 }
+  ],
+  "recentActivity": [
+    {
+      "Id": 1,
+      "type": "sale",
+      "description": "Sold Air Force 1 Low White - Size 9",
+      "amount": 97.19,
+      "timestamp": "2024-01-16T10:30:00Z"
+    },
+    {
+      "Id": 2,
+      "type": "stock_update",
+      "description": "Received 15 units of 990v5 Grey",
+      "timestamp": "2024-01-15T10:30:00Z"
+    },
+    {
+      "Id": 3,
+      "type": "low_stock",
+      "description": "Dunk Low Panda is running low (5 units left)",
+      "timestamp": "2024-01-15T08:15:00Z"
+    }
+  ]
+}

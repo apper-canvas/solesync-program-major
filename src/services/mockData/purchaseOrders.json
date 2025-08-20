@@ -1,0 +1,84 @@
+[
+  {
+    "Id": 1001,
+    "supplier": "Nike Inc.",
+    "status": "pending",
+    "orderDate": "2024-01-10T09:00:00Z",
+    "expectedDate": "2024-01-20T09:00:00Z",
+    "items": [
+      {
+        "productId": 1,
+        "name": "Air Force 1 Low White",
+        "barcode": "123456789001",
+        "size": "9",
+        "orderedQty": 25,
+        "unitCost": 45.00
+      },
+      {
+        "productId": 11,
+        "name": "Dunk Low Panda",
+        "barcode": "123456789011",
+        "size": "9.5",
+        "orderedQty": 30,
+        "unitCost": 55.00
+      }
+    ],
+    "totalCost": 2775.00
+  },
+  {
+    "Id": 1002,
+    "supplier": "Adidas AG",
+    "status": "pending",
+    "orderDate": "2024-01-12T14:30:00Z",
+    "expectedDate": "2024-01-22T14:30:00Z",
+    "items": [
+      {
+        "productId": 2,
+        "name": "Ultraboost 22 Black",
+        "barcode": "123456789002",
+        "size": "9",
+        "orderedQty": 20,
+        "unitCost": 90.00
+      },
+      {
+        "productId": 12,
+        "name": "Stan Smith White/Green",
+        "barcode": "123456789012",
+        "size": "8.5",
+        "orderedQty": 35,
+        "unitCost": 42.00
+      }
+    ],
+    "totalCost": 3270.00
+  },
+  {
+    "Id": 1003,
+    "supplier": "New Balance Inc.",
+    "status": "received",
+    "orderDate": "2024-01-05T11:15:00Z",
+    "expectedDate": "2024-01-15T11:15:00Z",
+    "receivedDate": "2024-01-15T10:30:00Z",
+    "items": [
+      {
+        "productId": 4,
+        "name": "990v5 Grey",
+        "barcode": "123456789004",
+        "size": "9",
+        "orderedQty": 15,
+        "unitCost": 92.00
+      }
+    ],
+    "receivedItems": [
+      {
+        "productId": 4,
+        "name": "990v5 Grey",
+        "barcode": "123456789004",
+        "size": "9",
+        "orderedQty": 15,
+        "receivedQty": 15,
+        "unitCost": 92.00
+      }
+    ],
+    "totalCost": 1380.00
+  }
+]

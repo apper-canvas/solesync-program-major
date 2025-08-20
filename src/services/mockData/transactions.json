@@ -1,0 +1,77 @@
+[
+  {
+    "Id": 1,
+    "type": "sale",
+    "items": [
+      {
+        "id": "1-9",
+        "productId": 1,
+        "name": "Air Force 1 Low White",
+        "brand": "Nike",
+        "size": "9",
+        "price": 89.99,
+        "quantity": 1
+      }
+    ],
+    "subtotal": 89.99,
+    "discount": 0,
+    "tax": 7.20,
+    "total": 97.19,
+    "payment": {
+      "method": "card",
+      "amount": 97.19,
+      "change": 0
+    },
+    "timestamp": "2024-01-16T10:30:00Z"
+  },
+  {
+    "Id": 2,
+    "type": "sale",
+    "items": [
+      {
+        "id": "6-8.5",
+        "productId": 6,
+        "name": "Old Skool Black/White",
+        "brand": "Vans",
+        "size": "8.5",
+        "price": 64.99,
+        "quantity": 2
+      }
+    ],
+    "subtotal": 129.98,
+    "discount": 13.00,
+    "tax": 9.36,
+    "total": 126.34,
+    "payment": {
+      "method": "cash",
+      "amount": 130.00,
+      "change": 3.66
+    },
+    "timestamp": "2024-01-16T14:45:00Z"
+  },
+  {
+    "Id": 3,
+    "type": "return",
+    "items": [
+      {
+        "id": "3-10",
+        "productId": 3,
+        "name": "Air Jordan 1 High Chicago",
+        "brand": "Jordan",
+        "size": "10",
+        "price": 169.99,
+        "quantity": 1
+      }
+    ],
+    "subtotal": -169.99,
+    "discount": 0,
+    "tax": -13.60,
+    "total": -183.59,
+    "payment": {
+      "method": "refund",
+      "amount": -183.59,
+      "change": 0
+    },
+    "timestamp": "2024-01-15T16:20:00Z"
+  }
+]
