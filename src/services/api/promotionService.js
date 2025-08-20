@@ -1,17 +1,17 @@
 import promotionData from '@/services/mockData/promotions.json';
 
-export const PromotionService = {
+export class PromotionService {
   static async getAll() {
     await new Promise(resolve => setTimeout(resolve, 300));
     return promotionData.map(promotion => ({ ...promotion }));
-  },
+  }
 
   static async getById(id) {
     await new Promise(resolve => setTimeout(resolve, 200));
     const promotion = promotionData.find(p => p.Id === parseInt(id));
     if (!promotion) throw new Error('Promotion not found');
     return { ...promotion };
-  },
+  }
 
   static async create(promotion) {
     await new Promise(resolve => setTimeout(resolve, 400));
@@ -24,7 +24,7 @@ export const PromotionService = {
     };
     promotionData.push(newPromotion);
     return { ...newPromotion };
-  },
+  }
 
   static async update(id, updateData) {
     await new Promise(resolve => setTimeout(resolve, 400));
@@ -38,7 +38,7 @@ export const PromotionService = {
       updatedAt: new Date().toISOString()
     };
     return { ...promotionData[index] };
-  },
+  }
 
   static async delete(id) {
     await new Promise(resolve => setTimeout(resolve, 300));
@@ -47,7 +47,7 @@ export const PromotionService = {
     
     const deleted = promotionData.splice(index, 1)[0];
     return { ...deleted };
-  },
+  }
 
   static async getActivePromotions() {
     await new Promise(resolve => setTimeout(resolve, 250));
@@ -58,4 +58,4 @@ export const PromotionService = {
       new Date(p.endDate) >= now
     ).map(promotion => ({ ...promotion }));
   }
-};
+}
